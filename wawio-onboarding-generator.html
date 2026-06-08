@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wawio — Onboarding Package Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --teal-50: #E1F5EE;
+      --teal-100: #9FE1CB;
+      --teal-400: #1D9E75;
+      --teal-600: #0F6E56;
+      --teal-800: #085041;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --gray-800: #1e293b;
+      --blue-50: #eff6ff;
+      --blue-200: #bfdbfe;
+      --blue-700: #1d4ed8;
+      --purple-50: #faf5ff;
+      --purple-200: #e9d5ff;
+      --purple-700: #7e22ce;
+      --amber-50: #fffbeb;
+      --amber-200: #fde68a;
+      --amber-700: #b45309;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #f0f4f8;
+      color: var(--gray-800);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ─── HEADER ─────────────────────────────────────────── */
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 28px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-mark {
+      width: 30px;
+      height: 30px;
+      background: var(--teal-600);
+      border-radius: 7px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: -0.5px;
+    }
+    .logo-name {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--gray-800);
+      letter-spacing: -0.3px;
+    }
+    .sep {
+      width: 1px;
+      height: 18px;
+      background: var(--gray-200);
+    }
+    .page-label {
+      font-size: 13px;
+      color: var(--gray-600);
+      font-weight: 500;
+    }
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge-version {
+      background: var(--teal-50);
+      color: var(--teal-800);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      border: 1px solid var(--teal-100);
+    }
+
+    /* ─── LAYOUT ─────────────────────────────────────────── */
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 28px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ─── SECTION CARD ───────────────────────────────────── */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .step-pill {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-pill.done   { background: var(--teal-600); color: #fff; }
+    .step-pill.active { background: var(--teal-50); color: var(--teal-600); border: 1.5px solid var(--teal-100); }
+    .step-pill.idle   { background: var(--gray-100); color: var(--gray-400); }
+    .card-title { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+    .card-subtitle { font-size: 12px; color: var(--gray-400); margin-top: 1px; }
+    .card-body { padding: 22px 24px; }
+
+    /* ─── UPLOAD SECTION ─────────────────────────────────── */
+    .upload-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .drop-zone {
+      border: 2px dashed var(--gray-200);
+      border-radius: 10px;
+      padding: 22px 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.18s;
+      background: var(--gray-50);
+    }
+    .drop-zone.has-file {
+      border-color: var(--teal-400);
+      background: #f0faf6;
+    }
+    .dz-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .dz-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: 3px;
+    }
+    .dz-hint {
+      font-size: 11.5px;
+      color: var(--gray-400);
+    }
+    .dz-filename {
+      display: inline-block;
+      margin-top: 10px;
+      background: var(--teal-50);
+      color: var(--teal-800);
+      border: 1px solid var(--teal-100);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .dz-check { color: var(--teal-600); margin-right: 3px; }
+
+    .btn-generate {
+      background: var(--teal-600);
+      color: #fff;
+      border: none;
+      padding: 11px 24px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.2px;
+    }
+    .btn-generate .icon { font-size: 15px; }
+
+    /* ─── EXTRACTED INFO ─────────────────────────────────── */
+    .alert-ok {
+      background: var(--teal-50);
+      border: 1px solid var(--teal-100);
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-size: 12.5px;
+      color: var(--teal-800);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .info-block {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .info-lbl {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-400);
+      margin-bottom: 5px;
+    }
+    .info-val {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+    .products-block {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 8px;
+    }
+    .sku-tag {
+      background: var(--teal-50);
+      color: var(--teal-800);
+      border: 1px solid var(--teal-100);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 11px;
+      border-radius: 20px;
+    }
+
+    /* ─── OUTPUT CARDS ───────────────────────────────────── */
+    .output-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .out-card {
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .out-header {
+      padding: 16px 16px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .out-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .out-title { font-size: 13px; font-weight: 600; color: var(--gray-800); line-height: 1.35; }
+    .out-for { font-size: 11px; color: var(--gray-400); margin-top: 3px; }
+    .out-body { padding: 14px 16px 16px; flex: 1; display: flex; flex-direction: column; }
+    .out-count { font-size: 11.5px; color: var(--gray-400); margin-bottom: 10px; }
+    .preview-box {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 11.5px;
+      color: var(--gray-600);
+      line-height: 1.7;
+      flex: 1;
+      margin-bottom: 12px;
+    }
+    .preview-box li { margin-left: 14px; }
+    .preview-box .more { color: var(--gray-400); font-style: italic; }
+    .btn-dl {
+      width: 100%;
+      padding: 9px;
+      border-radius: 7px;
+      font-size: 12.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1.5px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-dl.blue   { background: var(--blue-50);   color: var(--blue-700);   border-color: var(--blue-200); }
+    .btn-dl.purple { background: var(--purple-50); color: var(--purple-700); border-color: var(--purple-200); }
+    .btn-dl.amber  { background: var(--amber-50);  color: var(--amber-700);  border-color: var(--amber-200); }
+
+    /* ─── PROGRESS STEPS ─────────────────────────────────── */
+    .flow-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0;
+      margin-bottom: 4px;
+    }
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray-400);
+    }
+    .flow-step.done { color: var(--teal-600); }
+    .flow-step.active { color: var(--gray-800); }
+    .flow-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--gray-200);
+    }
+    .flow-step.done .flow-dot { background: var(--teal-600); }
+    .flow-step.active .flow-dot { background: var(--gray-800); }
+    .flow-line {
+      flex: 1;
+      height: 1px;
+      background: var(--gray-200);
+      margin: 0 8px;
+      min-width: 20px;
+    }
+    .flow-line.done { background: var(--teal-400); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo-mark">W</div>
+      <span class="logo-name">Wawio</span>
+      <div class="sep"></div>
+      <span class="page-label">Onboarding Package Generator</span>
+      <div class="header-right">
+        <span class="badge-version">v1.0 · Internal</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Flow indicator -->
+    <div class="flow-bar">
+      <div class="flow-step done"><div class="flow-dot"></div> Upload Documents</div>
+      <div class="flow-line done"></div>
+      <div class="flow-step done"><div class="flow-dot"></div> Extract Info</div>
+      <div class="flow-line done"></div>
+      <div class="flow-step done"><div class="flow-dot"></div> Review</div>
+      <div class="flow-line done"></div>
+      <div class="flow-step active"><div class="flow-dot"></div> Generate Outputs</div>
+    </div>
+
+    <!-- ── STEP 1: Upload ── -->
+    <div class="card">
+      <div class="card-header">
+        <div class="step-pill done">✓</div>
+        <div>
+          <div class="card-title">Step 1 — Upload Source Documents</div>
+          <div class="card-subtitle">Supported: PDF only · Max 10 MB per file</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="upload-row">
+          <div class="drop-zone has-file">
+            <span class="dz-icon">📄</span>
+            <div class="dz-title">Project Submission Form</div>
+            <div class="dz-hint">Contains merchant info, processor, and install type</div>
+            <span class="dz-filename"><span class="dz-check">✓</span>PSF_ThaiOrchid_0421.pdf</span>
+          </div>
+          <div class="drop-zone has-file">
+            <span class="dz-icon">📦</span>
+            <div class="dz-title">Packing Slip</div>
+            <div class="dz-hint">Contains SKUs and hardware items shipped</div>
+            <span class="dz-filename"><span class="dz-check">✓</span>PackingSlip_INV-00421.pdf</span>
+          </div>
+        </div>
+        <button class="btn-generate">
+          <span class="icon">⚙</span> Generate Package
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: Extracted Info ── -->
+    <div class="card">
+      <div class="card-header">
+        <div class="step-pill done">✓</div>
+        <div>
+          <div class="card-title">Step 2 — Extracted Merchant Info</div>
+          <div class="card-subtitle">Pulled from both documents · Please verify before continuing</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="alert-ok">
+          ✅ &nbsp;2 documents processed · 6 SKUs identified · 1 processor detected · Rules matched from Google Sheets
+        </div>
+        <div class="info-grid">
+          <div class="info-block">
+            <div class="info-lbl">Merchant Name</div>
+            <div class="info-val">Thai Orchid Restaurant</div>
+          </div>
+          <div class="info-block">
+            <div class="info-lbl">CC Processor</div>
+            <div class="info-val">TSYS</div>
+          </div>
+          <div class="info-block">
+            <div class="info-lbl">Installation Type</div>
+            <div class="info-val">New Installation</div>
+          </div>
+          <div class="info-block">
+            <div class="info-lbl">Project ID</div>
+            <div class="info-val">WW-2024-0421</div>
+          </div>
+          <div class="info-block">
+            <div class="info-lbl">Sales Rep</div>
+            <div class="info-val">Aom S.</div>
+          </div>
+          <div class="info-block">
+            <div class="info-lbl">Location</div>
+            <div class="info-val">Los Angeles, CA</div>
+          </div>
+        </div>
+        <div class="products-block">
+          <div class="info-lbl">Products Detected from Packing Slip</div>
+          <div class="tag-list">
+            <span class="sku-tag">4Soft POS Terminal ×2</span>
+            <span class="sku-tag">Kitchen Display System</span>
+            <span class="sku-tag">Cash Drawer</span>
+            <span class="sku-tag">TSYS Payment Terminal</span>
+            <span class="sku-tag">Receipt Printer (USB)</span>
+            <span class="sku-tag">Blizzfull Online Ordering</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: Outputs ── -->
+    <div class="card">
+      <div class="card-header">
+        <div class="step-pill done">✓</div>
+        <div>
+          <div class="card-title">Step 3 — Generated Output Documents</div>
+          <div class="card-subtitle">3 documents ready · Based on matched rules from sku_map, product_tasks, processor_docs, task_timeline</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="output-grid">
+
+          <!-- PM Task List -->
+          <div class="out-card">
+            <div class="out-header">
+              <div class="out-icon" style="background: var(--blue-50);">📋</div>
+              <div>
+                <div class="out-title">PM Task List</div>
+                <div class="out-for">→ Project Manager · Zoho Project</div>
+              </div>
+            </div>
+            <div class="out-body">
+              <div class="out-count">18 tasks · 4 categories</div>
+              <div class="preview-box">
+                <ul>
+                  <li>4Soft POS Setup ×2</li>
+                  <li>TSYS Terminal Configuration</li>
+                  <li>KDS Wiring & Network</li>
+                  <li>Blizzfull Menu Onboarding</li>
+                  <li>Receipt Printer (USB) Setup</li>
+                  <li>Staff Training — POS & KDS</li>
+                  <li class="more">+12 more tasks…</li>
+                </ul>
+              </div>
+              <button class="btn-dl blue">⬇ Download Task List</button>
+            </div>
+          </div>
+
+          <!-- Sales Support Checklist -->
+          <div class="out-card">
+            <div class="out-header">
+              <div class="out-icon" style="background: var(--purple-50);">📑</div>
+              <div>
+                <div class="out-title">Sales Support Checklist</div>
+                <div class="out-for">→ Sales Support · Documents to Send</div>
+              </div>
+            </div>
+            <div class="out-body">
+              <div class="out-count">9 required documents</div>
+              <div class="preview-box">
+                <ul>
+                  <li>TSYS Merchant Agreement</li>
+                  <li>TSYS PCI Compliance Form</li>
+                  <li>4Soft License Agreement</li>
+                  <li>Blizzfull Account Signup</li>
+                  <li>Menu Upload Template</li>
+                  <li>Hardware Receipt Copy</li>
+                  <li class="more">+3 more documents…</li>
+                </ul>
+              </div>
+              <button class="btn-dl purple">⬇ Download Checklist</button>
+            </div>
+          </div>
+
+          <!-- Merchant Timeline -->
+          <div class="out-card">
+            <div class="out-header">
+              <div class="out-icon" style="background: var(--amber-50);">📅</div>
+              <div>
+                <div class="out-title">Merchant Onboarding Timeline</div>
+                <div class="out-for">→ Merchant · What to Expect</div>
+              </div>
+            </div>
+            <div class="out-body">
+              <div class="out-count">4 phases · ~3 weeks</div>
+              <div class="preview-box">
+                <ul>
+                  <li>Week 1 — Document Submission</li>
+                  <li>Week 2 — System Setup & Config</li>
+                  <li>Week 2–3 — Testing & Training</li>
+                  <li>Week 3 — Go-Live</li>
+                  <li>Post Go-Live — 30-Day Support</li>
+                </ul>
+              </div>
+              <button class="btn-dl amber">⬇ Download Timeline</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+</body>
+</html>
