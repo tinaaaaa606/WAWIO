@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wawio Onboarding Email Generator</title>
+<style>
+  :root{
+    --red:#c0392b;
+    --orange:#e67e22;
+    --cream:#f4f1eb;
+    --card-cream:#fdf8f3;
+    --border:#f0e6d3;
+    --ink:#333;
+    --muted:#777;
+    --faint:#aaa;
+    --ok:#2e7d32;
+    --warn:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+  }
+  header{
+    background:linear-gradient(135deg,var(--red) 0%,#e74c3c 50%,var(--orange) 100%);
+    color:#fff;
+    padding:16px 24px;
+    position:sticky;
+    top:0;
+    z-index:10;
+    box-shadow:0 4px 16px rgba(0,0,0,0.12);
+  }
+  .header-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  header h1{
+    margin:0;
+    font-family:Georgia, serif;
+    font-size:20px;
+    font-weight:700;
+  }
+  header p{
+    margin:2px 0 0;
+    font-size:12px;
+    color:rgba(255,255,255,0.85);
+  }
+  .actions{display:flex; gap:8px; flex-wrap:wrap;}
+  button{
+    font-family:Arial, sans-serif;
+    font-size:13px;
+    font-weight:700;
+    border:none;
+    border-radius:8px;
+    padding:10px 16px;
+    cursor:pointer;
+    transition:transform .1s ease, opacity .15s ease;
+  }
+  button:active{transform:scale(0.97);}
+  .btn-primary{background:#fff; color:var(--red);}
+  .btn-secondary{background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.4);}
+  .btn-ghost{background:transparent; color:rgba(255,255,255,0.85); border:1px dashed rgba(255,255,255,0.5);}
+
+  .tabs{display:flex; gap:8px; flex-wrap:wrap;}
+  .tab-btn{
+    background:rgba(255,255,255,0.12);
+    color:rgba(255,255,255,0.85);
+    border:1px solid rgba(255,255,255,0.3);
+    padding:9px 18px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background:#fff;
+    color:var(--red);
+    border-color:#fff;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns:380px 1fr;
+    gap:0;
+    align-items:start;
+    min-height:calc(100vh - 116px);
+  }
+  @media (max-width: 880px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .form-panel{
+    padding:20px;
+    max-height:calc(100vh - 116px);
+    overflow-y:auto;
+    border-right:1px solid var(--border);
+    background:#fff;
+  }
+  @media (max-width: 880px){
+    .form-panel{max-height:none; border-right:none; border-bottom:1px solid var(--border);}
+  }
+
+  .group{
+    background:var(--card-cream);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .group h2{
+    margin:0 0 12px;
+    font-size:11px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--red);
+    font-weight:700;
+  }
+  .field{margin-bottom:12px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:4px;
+  }
+  .field label .en{
+    font-weight:400;
+    color:var(--muted);
+    font-size:11px;
+  }
+  .field label .en.req{color:var(--red); font-weight:700;}
+  .field input{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    font-size:13px;
+    font-family:Arial, sans-serif;
+    background:#fff;
+  }
+  .field input:focus{
+    outline:none;
+    border-color:var(--orange);
+    box-shadow:0 0 0 3px rgba(230,126,34,0.15);
+  }
+  .hint{font-size:11px; color:var(--faint); margin-top:3px; line-height:1.4;}
+
+  .preview-panel{
+    padding:24px;
+    overflow-y:auto;
+    max-height:calc(100vh - 116px);
+  }
+  .preview-frame-wrap{
+    max-width:680px;
+    margin:0 auto;
+    background:var(--cream);
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid var(--border);
+  }
+  iframe{
+    width:100%;
+    height:1900px;
+    border:none;
+    display:block;
+  }
+  .status-bar{
+    max-width:680px;
+    margin:0 auto 12px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    font-size:12px;
+  }
+  .pill{
+    padding:5px 10px;
+    border-radius:20px;
+    font-weight:700;
+  }
+  .pill.ok{background:#e8f5e9; color:var(--ok);}
+  .pill.missing{background:#fdecea; color:var(--warn);}
+
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:#222;
+    color:#fff;
+    padding:10px 20px;
+    border-radius:8px;
+    font-size:13px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    z-index:100;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div>
+      <h1 id="toolTitle">🧾 Wawio Onboarding Email Generator</h1>
+      <p>เลือก template → กรอกข้อมูลร้าน → copy HTML ไปวางใน Zoho (HTML/Source mode)</p>
+    </div>
+    <div class="actions">
+      <button class="btn-ghost" id="btnSample">ใส่ตัวอย่าง</button>
+      <button class="btn-ghost" id="btnClear">ล้างฟอร์ม</button>
+      <button class="btn-secondary" id="btnDownload">ดาวน์โหลด .html</button>
+      <button class="btn-primary" id="btnCopy">📋 Copy HTML</button>
+    </div>
+  </div>
+  <div class="tabs" id="tabBar"></div>
+</header>
+
+<div class="layout">
+  <div class="form-panel" id="formPanel"></div>
+
+  <div class="preview-panel">
+    <div class="status-bar" id="statusBar"></div>
+    <div class="preview-frame-wrap">
+      <iframe id="previewFrame" title="Email preview"></iframe>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script id="tpl-blizzfull" type="text/template">
+<table style="background-color:#f4f1eb;" border="0" cellspacing="0" cellpadding="0" width="100%">
+   <tbody>
+      <tr>
+         <td style="padding:40px 16px;" align="center">
+            <table style="max-width:600px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);" border="0" cellspacing="0" cellpadding="0" width="600">
+               <tbody>
+                  <tr>
+                     <td style="background:linear-gradient(135deg,#c0392b 0%,#e74c3c 50%,#e67e22 100%);padding:48px 40px 36px;text-align:center;">
+                        <p style="margin: 0px 0px 8px; letter-spacing: 4px; text-transform: uppercase;"><span class="colour" style="color:rgba(255, 255, 255, 0.75)"><span class="font" style="font-family:Georgia, serif"><span class="size" style="font-size: 13px; margin: 0px 0px 8px; letter-spacing: 4px; text-transform: uppercase;">Welcome to</span></span></span><br></p>
+                        <img style="display:inline-block;vertical-align:middle;margin-right:10px;" alt="Wawio Logo" height="52" width="52" src="https://static.wixstatic.com/media/e4213d_8a31ddb6a64f441eb43f13ffb7030b41~mv2.png/v1/fill/w_100,h_100,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Wawio%20Trans.png">
+                        <h1 style="margin:0;display:inline;font-family:'Georgia',serif;font-size:42px;font-weight:700;color:#ffffff;letter-spacing:-1px;vertical-align:middle;">Wawio</h1>
+                        <div style="width:48px;height:3px;background:rgba(255,255,255,0.5);margin:16px auto 0;border-radius:2px;"><br></div>
+                        <p style="margin: 16px 0px 0px;"><span class="colour" style="color:rgba(255, 255, 255, 0.9)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 15px; margin: 16px 0px 0px;">Your Online Ordering System is Ready 🎉</span></span></span><br></p>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:40px 40px 0;">
+                        <p style="margin: 0px; line-height: 1.7;"><span class="colour" style="color:rgb(85, 85, 85)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 16px; margin: 0px; line-height: 1.7;">Dear <b>{{OWNER_FULL_NAME}}</b>,</span></span></span><br></p>
+                        <p style="margin: 16px 0px 0px; line-height: 1.8;"><span class="colour" style="color:rgb(102, 102, 102)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 15px; margin: 16px 0px 0px; line-height: 1.8;">We're thrilled to launch your new online ordering system and website for <b>{{ACCOUNT_NAME}}</b>. Everything is set up and ready to go — here's everything you need to get started.</span></span></span><br></p>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:28px 40px 0;">
+                        <div style="height:1px;background:#f0ece4;"><br></div>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:28px 40px 0;">
+                        <p style="margin: 0px 0px 24px; border-left: 4px solid rgb(192, 57, 43); padding-left: 12px;"><span class="colour" style="color:rgb(51, 51, 51)"><b><span class="font" style="font-family:Georgia, serif"><span class="size" style="font-size: 22px; margin: 0px 0px 24px; border-left: 4px solid rgb(192, 57, 43); padding-left: 12px;">Steps to Get Started with Blizzfull</span></span></b></span><br></p>
+                        <p style="margin: 0px 0px 20px; letter-spacing: 3px; text-transform: uppercase;"><span class="colour" style="color:rgb(192, 57, 43)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 11px; margin: 0px 0px 20px; letter-spacing: 3px; text-transform: uppercase;">1 — Download Blizzfull Dashboard App</span></span></b></span><br></p>
+                        <table border="0" cellspacing="0" cellpadding="0" width="100%">
+                           <tbody>
+                              <tr>
+                                 <td style="text-align:center;padding:0 8px 0 0;vertical-align:top;" width="50%">
+                                    <div style="background:#fdf8f3;border:1px solid #f0e6d3;border-radius:12px;padding:20px 12px;">
+                                       <img style="display:block;margin:0 auto 12px;" alt="iOS QR" height="100" width="100" src="{{IOS_QR_IMG}}">
+                                       <p style="margin: 0px;"><span class="colour" style="color:rgb(51, 51, 51)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 0px;">iOS</span></span></b></span><br></p>
+                                       <p style="margin:8px 0 0;"><a style="font-family:Arial,sans-serif;font-size:11px;color:#c0392b;text-decoration:none;" href="https://apps.apple.com/us/app/blizzfull-dashboard/id1500551659">Download on App Store →</a><br></p>
+                                    </div>
+                                 </td>
+                                 <td style="text-align:center;padding:0 0 0 8px;vertical-align:top;" width="50%">
+                                    <div style="background:#fdf8f3;border:1px solid #f0e6d3;border-radius:12px;padding:20px 12px;">
+                                       <img style="display:block;margin:0 auto 12px;" alt="Android QR" height="100" width="100" src="{{ANDROID_QR_IMG}}">
+                                       <p style="margin: 0px;"><span class="colour" style="color:rgb(51, 51, 51)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 0px;">Android</span></span></b></span><br></p>
+                                       <p style="margin:8px 0 0;"><a style="font-family:Arial,sans-serif;font-size:11px;color:#c0392b;text-decoration:none;" href="https://www.blizzstatic.com/dash.apk">Download APK →</a><br></p>
+                                    </div>
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                        <p style="margin: 16px 0px 0px;"><span class="colour" style="color:rgb(170, 170, 170)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 16px 0px 0px;">📱 Download the app on your tablet to manage orders, view reports, and more.</span></span></span><br></p>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:28px 40px 0;">
+                        <div style="height:1px;background:#f0ece4;"><br></div>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:28px 40px 0;">
+                        <table border="0" cellspacing="0" cellpadding="0" width="100%">
+                           <tbody>
+                              <tr>
+                                 <td>
+                                    <p style="margin: 0px 0px 16px; letter-spacing: 3px; text-transform: uppercase;"><span class="colour" style="color:rgb(192, 57, 43)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 11px; margin: 0px 0px 16px; letter-spacing: 3px; text-transform: uppercase;">2 — Log In to Your Dashboard</span></span></b></span><br></p>
+                                    <table style="background:#fdf8f3;border-radius:12px;border:1px solid #f0e6d3;overflow:hidden;" border="0" cellspacing="0" cellpadding="0" width="100%">
+                                       <tbody>
+                                          <tr>
+                                             <td style="padding:20px 24px;">
+                                                <table border="0" cellspacing="0" cellpadding="6" width="100%">
+                                                   <tbody>
+                                                      <tr>
+                                                         <td style="font-family:Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Restaurant ID<br></td>
+                                                         <td style="font-family:Arial,sans-serif;font-size:14px;color:#333;font-weight:600;">{{RESTAURANT_ID}}<br></td>
+                                                      </tr>
+                                                      <tr>
+                                                         <td style="font-family:Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Username<br></td>
+                                                         <td style="font-family:Arial,sans-serif;font-size:14px;color:#333;font-weight:600;">{{USERNAME}}<br></td>
+                                                      </tr>
+                                                      <tr>
+                                                         <td style="font-family:Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Password<br></td>
+                                                         <td style="font-family:Arial,sans-serif;font-size:14px;color:#333;font-weight:600;font-family:monospace;">{{PASSWORD}}<br></td>
+                                                      </tr>
+                                                   </tbody>
+                                                </table>
+                                             </td>
+                                          </tr>
+                                       </tbody>
+                                    </table>
+                                    <p style="margin: 12px 0px 0px;"><span class="colour" style="color:rgb(170, 170, 170)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 12px 0px 0px;">⚠️ Please keep these credentials safe. We recommend changing your password after your first login.</span></span></span><br></p>
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:28px 40px 0;">
+                        <div style="height:1px;background:#f0ece4;"><br></div>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:28px 40px 0;">
+                        <p style="margin: 0px 0px 20px; letter-spacing: 3px; text-transform: uppercase;"><span class="colour" style="color:rgb(192, 57, 43)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 11px; margin: 0px 0px 20px; letter-spacing: 3px; text-transform: uppercase;">3 — View the Quick Guide</span></span></b></span><br></p>
+                        <table border="0" cellspacing="0" cellpadding="0" width="100%">
+                           <tbody>
+                              <tr>
+                                 <td style="vertical-align:top;" width="140">
+                                    <div style="background:#fdf8f3;border:1px solid #f0e6d3;border-radius:12px;padding:20px;text-align:center;">
+                                       <img style="display:block;margin:0 auto 10px;" alt="Quick Guide QR" height="100" width="100" src="{{GUIDE_QR_IMG}}">
+                                       <p style="margin: 0px;"><span class="colour" style="color:rgb(136, 136, 136)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 11px; margin: 0px;">Scan to read guide</span></span></span><br></p>
+                                    </div>
+                                 </td>
+                                 <td style="padding-left:24px;vertical-align:middle;">
+                                    <p style="margin: 0px 0px 8px;"><span class="colour" style="color:rgb(51, 51, 51)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 14px; margin: 0px 0px 8px;">Getting Started with Blizzfull</span></span></b></span><br></p>
+                                    <p style="margin: 0px; line-height: 1.7;"><span class="colour" style="color:rgb(119, 119, 119)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 13px; margin: 0px; line-height: 1.7;">Scan this QR code to open the View the Quick Guide — it covers everything you need to manage your online ordering system.</span></span></span><br></p>
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:28px 40px 0;">
+                        <div style="height:1px;background:#f0ece4;"><br></div>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:28px 40px 0;">
+                        <p style="margin: 0px 0px 20px; letter-spacing: 3px; text-transform: uppercase;"><span class="colour" style="color:rgb(192, 57, 43)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 11px; margin: 0px 0px 20px; letter-spacing: 3px; text-transform: uppercase;">4 — Your QR Codes</span></span></b></span><br></p>
+                        <table border="0" cellspacing="0" cellpadding="0" width="100%">
+                           <tbody>
+                              <tr>
+                                 <td style="text-align:center;padding:0 8px 0 0;vertical-align:top;" width="50%">
+                                    <div style="background:#fdf8f3;border:1px solid #f0e6d3;border-radius:12px;padding:20px 12px;">
+                                       <img style="display:block;margin:0 auto 12px;" alt="Ordering Page QR" height="110" width="110" src="{{ORDERING_QR_IMG}}">
+                                       <p style="margin: 0px;"><span class="colour" style="color:rgb(51, 51, 51)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 0px;">Online Ordering</span></span></b></span><br></p>
+                                       <p style="margin: 4px 0px 0px;"><span class="colour" style="color:rgb(153, 153, 153)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 11px; margin: 4px 0px 0px;">{{ONLINE_ORDERING_URL}}</span></span></span><br></p>
+                                    </div>
+                                 </td>
+                                 <td style="text-align:center;padding:0 0 0 8px;vertical-align:top;" width="50%">
+                                    <div style="background:#fdf8f3;border:1px solid #f0e6d3;border-radius:12px;padding:20px 12px;">
+                                       <img style="display:block;margin:0 auto 12px;" alt="Website QR" height="110" width="110" src="{{WEBSITE_QR_IMG}}">
+                                       <p style="margin: 0px;"><span class="colour" style="color:rgb(51, 51, 51)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 0px;">Main Website</span></span></b></span><br></p>
+                                       <p style="margin: 4px 0px 0px;"><span class="colour" style="color:rgb(153, 153, 153)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 11px; margin: 4px 0px 0px;">{{DOMAIN_NAME}}</span></span></span><br></p>
+                                    </div>
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                        <p style="margin: 16px 0px 0px;"><span class="colour" style="color:rgb(170, 170, 170)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 16px 0px 0px;">💡 The most important QR code is <b>Online Ordering</b> — share it with your customers so they can place orders directly.</span></span></span><br></p>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:28px 40px 0;">
+                        <div style="height:1px;background:#f0ece4;"><br></div>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:28px 40px 0;text-align:center;"><a style="display:inline-block;background:linear-gradient(135deg,#c0392b,#e67e22);color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:50px;letter-spacing:0.5px;" href="{{DASHBOARD_URL}}">Go to Your Dashboard →</a><br></td>
+                  </tr>
+                  <tr>
+                     <td style="padding:28px 40px 0;">
+                        <table style="background:linear-gradient(135deg,#c0392b,#e67e22);border-radius:12px;" border="0" cellspacing="0" cellpadding="0" width="100%">
+                           <tbody>
+                              <tr>
+                                 <td style="padding:24px 28px;">
+                                    <p style="margin: 0px 0px 8px; letter-spacing: 1px;"><span class="colour" style="color:rgb(255, 255, 255)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 13px; margin: 0px 0px 8px; letter-spacing: 1px;">We're Here to Help</span></span></b></span><br></p>
+                                    <p style="margin: 0px; line-height: 1.7;"><span class="colour" style="color:rgba(255, 255, 255, 0.9)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 13px; margin: 0px; line-height: 1.7;">If you have any questions, need help logging in, or want to discuss marketing strategies, don't hesitate to reach out. We look forward to a long and successful partnership!</span></span></span><br></p>
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td style="padding:32px 40px;text-align:center;">
+                        <p style="margin:0;"><img style="display:inline-block;vertical-align:middle;margin-right:8px;" alt="Wawio Logo" height="36" width="36" src="https://static.wixstatic.com/media/e4213d_8a31ddb6a64f441eb43f13ffb7030b41~mv2.png/v1/fill/w_100,h_100,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Wawio%20Trans.png"><a style="color:#c0392b;text-decoration:none;font-family:'Georgia',serif;font-size:18px;font-weight:700;vertical-align:middle;" href="https://www.wawio.com/">Wawio</a><br></p>
+                        <p style="margin: 6px 0px 0px;"><span class="colour" style="color:rgb(187, 187, 187)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 6px 0px 0px;">POS &amp; Online Ordering Solutions for Thai Restaurants</span></span></span><br></p>
+                        <p style="margin: 16px 0px 4px;"><span class="colour" style="color:rgb(153, 153, 153)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 16px 0px 4px;">📞 <a style="color:#999;text-decoration:none;" href="tel:+18189426150">818-942-6150</a> &nbsp;Customer Service</span></span></span><br></p>
+                        <p style="margin: 0px;"><span class="colour" style="color:rgb(153, 153, 153)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 0px;">🔧 <a style="color:#999;text-decoration:none;" href="tel:+18189426160">818-942-6160</a> &nbsp;Technical Support</span></span></span><br></p>
+                        <p style="margin: 16px 0px 0px;"><span class="colour" style="color:rgb(204, 204, 204)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 16px 0px 0px;">© 2026 Wawio. All rights reserved.</span></span></span><br></p>
+                     </td>
+                  </tr>
+               </tbody>
+            </table>
+         </td>
+      </tr>
+   </tbody>
+</table>
+</script>
+
+<script id="tpl-deliverect" type="text/template">
+<table style="background-color:#f0f4f8;" border="0" cellspacing="0" cellpadding="0" width="100%"><tbody><tr><td style="padding:40px 16px;" align="center"><table style="max-width:600px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);" border="0" cellspacing="0" cellpadding="0" width="600"><tbody><tr><td style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:48px 40px 36px;text-align:center;"><p style="margin: 0px 0px 8px; letter-spacing: 4px; text-transform: uppercase;"><span class="colour" style="color:rgba(255, 255, 255, 0.6)"><span class="font" style="font-family:Georgia, serif"><span class="size" style="font-size: 13px; margin: 0px 0px 8px; letter-spacing: 4px; text-transform: uppercase;">Welcome to</span></span></span><br></p><img style="display:inline-block;vertical-align:middle;margin-right:10px;" alt="Wawio Logo" height="52" width="52" src="https://static.wixstatic.com/media/e4213d_8a31ddb6a64f441eb43f13ffb7030b41~mv2.png/v1/fill/w_100,h_100,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Wawio%20Trans.png"><h1 style="margin:0;display:inline;font-family:'Georgia',serif;font-size:42px;font-weight:700;color:#ffffff;letter-spacing:-1px;vertical-align:middle;">Wawio</h1><div style="width:48px;height:3px;background:linear-gradient(90deg,#e74c3c,#e67e22);margin:16px auto 0;border-radius:2px;"><br></div><p style="margin: 16px 0px 4px;"><span class="colour" style="color:rgba(255, 255, 255, 0.9)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 15px; margin: 16px 0px 4px;">Your Deliverect Integration is Ready 🚀</span></span></span><br></p><p style="margin: 0px; letter-spacing: 1px; text-transform: uppercase;"><span class="colour" style="color:rgba(255, 255, 255, 0.5)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 13px; margin: 0px; letter-spacing: 1px; text-transform: uppercase;">Deliverect Onboarding</span></span></span><br></p></td></tr><tr><td style="padding:40px 40px 0;"><p style="margin: 0px; line-height: 1.7;"><span class="colour" style="color:rgb(85, 85, 85)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 16px; margin: 0px; line-height: 1.7;">Dear <b>{{OWNER_FULL_NAME}}</b>,</span></span></span><br></p><p style="margin: 16px 0px 0px; line-height: 1.8;"><span class="colour" style="color:rgb(102, 102, 102)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 15px; margin: 16px 0px 0px; line-height: 1.8;">Your Deliverect portal for <b>{{ACCOUNT_NAME}}</b> is now active. Below are your portal credentials — please keep them safe and log in to complete your setup.</span></span></span><br></p></td></tr><tr><td style="padding:28px 40px 0;"><div style="height:1px;background:#eef2f7;"><br></div></td></tr><tr><td style="padding:28px 40px 0;"><p style="margin: 0px 0px 16px; letter-spacing: 3px; text-transform: uppercase;"><span class="colour" style="color:rgb(15, 52, 96)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 11px; margin: 0px 0px 16px; letter-spacing: 3px; text-transform: uppercase;">Portal Credentials</span></span></b></span><br></p><table style="background:#f5f8ff;border-radius:12px;border:1px solid #dde8f5;overflow:hidden;" border="0" cellspacing="0" cellpadding="0" width="100%"><tbody><tr><td style="padding:20px 24px;"><table border="0" cellspacing="0" cellpadding="7" width="100%"><tbody><tr><td style="font-family:Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;width:120px;">Login Page<br></td><td style="font-family:Arial,sans-serif;font-size:14px;"><a style="color:#0f3460;text-decoration:none;font-weight:600;" href="https://frontend.deliverect.com/">frontend.deliverect.com</a><br></td></tr><tr><td style="font-family:Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Username<br></td><td style="font-family:Arial,sans-serif;font-size:14px;color:#333;font-weight:600;">{{LOGIN_ID}}<br></td></tr><tr><td style="font-family:Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Password<br></td><td style="font-family:Arial,sans-serif;font-size:14px;color:#333;font-weight:600;font-family:monospace;">{{PASSWORD}}<br></td></tr><tr><td style="font-family:Arial,sans-serif;font-size:12px;color:#999;text-transform:uppercase;letter-spacing:1px;">Help Guide<br></td><td style="font-family:Arial,sans-serif;font-size:14px;"><a style="color:#0f3460;text-decoration:none;" href="https://help.deliverect.com/">help.deliverect.com</a><br></td></tr></tbody></table></td></tr></tbody></table><p style="margin: 12px 0px 0px;"><span class="colour" style="color:rgb(170, 170, 170)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 12px 0px 0px;">⚠️ Please keep these credentials safe. We recommend changing your password after your first login.</span></span></span><br></p></td></tr><tr><td style="padding:28px 40px 0;"><div style="height:1px;background:#eef2f7;"><br></div></td></tr><tr><td style="padding:28px 40px 0;"><p style="margin: 0px 0px 20px; letter-spacing: 3px; text-transform: uppercase;"><span class="colour" style="color:rgb(15, 52, 96)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 11px; margin: 0px 0px 20px; letter-spacing: 3px; text-transform: uppercase;">Deliverect Quick Guide</span></span></b></span><br></p><table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody><tr><td style="vertical-align:top;" width="160"><div style="background:#f5f8ff;border:1px solid #dde8f5;border-radius:12px;padding:20px;text-align:center;"><img style="display:block;margin:0 auto 10px;" alt="Deliverect Guide QR" height="100" width="100" src="https://tinaaaaa.b-cdn.net/pdf%20generator/deliverect_quick_guide.png"><p style="margin: 0px;"><span class="colour" style="color:rgb(136, 136, 136)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 11px; margin: 0px;">Scan to open guide</span></span></span><br></p></div></td><td style="padding-left:24px;vertical-align:middle;"><p style="margin: 0px 0px 8px;"><span class="colour" style="color:rgb(51, 51, 51)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 14px; margin: 0px 0px 8px;">Getting Started with Deliverect</span></span></b></span><br></p><p style="margin: 0px; line-height: 1.7;"><span class="colour" style="color:rgb(119, 119, 119)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 13px; margin: 0px; line-height: 1.7;">Scan this QR code with your phone to open the Deliverect Quick Guide — it covers everything from menu setup to managing your first orders.</span></span></span><br></p><p style="margin:12px 0 0;"><a style="font-family:Arial,sans-serif;font-size:13px;color:#0f3460;font-weight:600;text-decoration:none;" href="https://help.deliverect.com/">Or visit help.deliverect.com →</a><br></p></td></tr></tbody></table></td></tr><tr><td style="padding:28px 40px 0;"><div style="height:1px;background:#eef2f7;"><br></div></td></tr><tr><td style="padding:28px 40px 0;text-align:center;"><a style="display:inline-block;background:linear-gradient(135deg,#1a1a2e,#0f3460);color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:50px;letter-spacing:0.5px;" href="https://frontend.deliverect.com/">Log in to Deliverect →</a><br></td></tr><tr><td style="padding:28px 40px 0;"><table style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:12px;" border="0" cellspacing="0" cellpadding="0" width="100%"><tbody><tr><td style="padding:24px 28px;"><p style="margin: 0px 0px 8px; letter-spacing: 1px;"><span class="colour" style="color:rgb(255, 255, 255)"><b><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 13px; margin: 0px 0px 8px; letter-spacing: 1px;">We're Here to Help</span></span></b></span><br></p><p style="margin: 0px; line-height: 1.7;"><span class="colour" style="color:rgba(255, 255, 255, 0.85)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 13px; margin: 0px; line-height: 1.7;">If you have any questions or need help during setup, please reach out to Wawio Support. We'll be happy to assist every step of the way.</span></span></span><br></p></td></tr></tbody></table></td></tr><tr><td style="padding:32px 40px;text-align:center;"><p style="margin:0;"><img style="display:inline-block;vertical-align:middle;margin-right:8px;" alt="Wawio Logo" height="36" width="36" src="https://static.wixstatic.com/media/e4213d_8a31ddb6a64f441eb43f13ffb7030b41~mv2.png/v1/fill/w_100,h_100,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Wawio%20Trans.png"><a style="color:#0f3460;text-decoration:none;font-family:'Georgia',serif;font-size:18px;font-weight:700;vertical-align:middle;" href="https://www.wawio.com/">Wawio</a><br></p><p style="margin: 6px 0px 0px;"><span class="colour" style="color:rgb(187, 187, 187)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 6px 0px 0px;">POS &amp; Online Ordering Solutions for Thai Restaurants</span></span></span><br></p><p style="margin: 16px 0px 4px;"><span class="colour" style="color:rgb(153, 153, 153)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 16px 0px 4px;">📞 <a style="color:#999;text-decoration:none;" href="tel:+18189426150">818-942-6150</a> &nbsp;Customer Service</span></span></span><br></p><p style="margin: 0px;"><span class="colour" style="color:rgb(153, 153, 153)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 0px;">🔧 <a style="color:#999;text-decoration:none;" href="tel:+18189426160">818-942-6160</a> &nbsp;Technical Support</span></span></span><br></p><p style="margin: 16px 0px 0px;"><span class="colour" style="color:rgb(204, 204, 204)"><span class="font" style="font-family:Arial, sans-serif"><span class="size" style="font-size: 12px; margin: 16px 0px 0px;">© 2026 Wawio. All rights reserved.</span></span></span><br></p></td></tr></tbody></table></td></tr></tbody></table>
+</script>
+
+<script>
+  const TEMPLATES = {
+    blizzfull: {
+      label: "🧾 Blizzfull",
+      title: "🧾 Wawio Onboarding Email Generator — Blizzfull",
+      tplId: "tpl-blizzfull",
+      groups: [
+        {
+          title: "ข้อมูลลูกค้า · Customer",
+          fields: [
+            {id:"owner_full_name", th:"ชื่อเจ้าของร้าน", en:"Owner Full Name", required:true, placeholder:"เช่น Somchai Jaidee"},
+            {id:"account_name", th:"ชื่อร้าน", en:"Account / Restaurant Name", required:true, placeholder:"เช่น Siam Grill LA"}
+          ]
+        },
+        {
+          title: "เข้าสู่ระบบ Blizzfull · Login",
+          fields: [
+            {id:"restaurant_id", th:"Restaurant ID", placeholder:"เช่น 10293"},
+            {id:"username", th:"Username", placeholder:"เช่น siamgrillla"},
+            {id:"password", th:"Password", placeholder:"เช่น Welcome2026!"}
+          ]
+        },
+        {
+          title: "ลิงก์ · Links",
+          fields: [
+            {id:"online_ordering_url", th:"ข้อความลิงก์ Online Ordering", en:"(แสดงใต้ QR)", placeholder:"order.wawio.com/siamgrillla"},
+            {id:"domain_name", th:"โดเมนเว็บไซต์หลัก", en:"Domain Name (แสดงใต้ QR)", placeholder:"siamgrillla.com"},
+            {id:"dashboard_url", th:"ลิงก์ปุ่ม Dashboard", en:"required", required:true, type:"url", placeholder:"https://dashboard.blizzfull.com/..."}
+          ]
+        },
+        {
+          title: "QR Code — ใช้ตัวเดิมได้ทุกร้าน",
+          hint: "ทั้ง 3 อันนี้ดึง default URL เดิมจาก template มาให้แล้ว — แก้เฉพาะตอนที่ Blizzfull เปลี่ยนลิงก์เท่านั้น",
+          fields: [
+            {id:"ios_qr_img", th:"QR App Store (iOS)", type:"url", default:"https://www.blizzstatic.com/dynamicmedia/image/765/69c4083306943.png"},
+            {id:"android_qr_img", th:"QR Android APK", type:"url", default:"https://www.blizzstatic.com/dynamicmedia/image/765/69c408a96905b.png"},
+            {id:"guide_qr_img", th:"QR Quick Guide", type:"url", default:"https://www.blizzstatic.com/dynamicmedia/image/765/69c305f9461e5.png"}
+          ]
+        },
+        {
+          title: "QR Code — เฉพาะร้านนี้",
+          hint: "สอง QR นี้ generate เฉพาะร้าน — อัปโหลดรูปไว้ที่ไหนก็ได้ แล้ววาง URL ตรงนี้",
+          fields: [
+            {id:"ordering_qr_img", th:"QR Online Ordering", en:"required", required:true, type:"url", placeholder:"วาง URL รูปที่อัปโหลดไว้แล้ว"},
+            {id:"website_qr_img", th:"QR เว็บไซต์หลัก", en:"required", required:true, type:"url", placeholder:"วาง URL รูปที่อัปโหลดไว้แล้ว"}
+          ]
+        }
+      ],
+      sample: {
+        owner_full_name:"Somchai Jaidee",
+        account_name:"Siam Grill LA",
+        restaurant_id:"10293",
+        username:"siamgrillla",
+        password:"Welcome2026!",
+        online_ordering_url:"order.wawio.com/siamgrillla",
+        domain_name:"siamgrillla.com",
+        dashboard_url:"https://dashboard.blizzfull.com/login",
+        ordering_qr_img:"https://www.blizzstatic.com/dynamicmedia/image/16008/6a3569e97d1cb.png",
+        website_qr_img:"https://www.blizzstatic.com/dynamicmedia/image/16008/6a35697fc5dab.png"
+      }
+    },
+    deliverect: {
+      label: "🚀 Deliverect",
+      title: "🚀 Wawio Onboarding Email Generator — Deliverect",
+      tplId: "tpl-deliverect",
+      groups: [
+        {
+          title: "ข้อมูลลูกค้า · Customer",
+          fields: [
+            {id:"owner_full_name", th:"ชื่อเจ้าของร้าน", en:"Owner Full Name", required:true, placeholder:"เช่น Somchai Jaidee"},
+            {id:"account_name", th:"ชื่อร้าน", en:"Account / Restaurant Name", required:true, placeholder:"เช่น Siam Grill LA"}
+          ]
+        },
+        {
+          title: "Portal Credentials",
+          fields: [
+            {id:"login_id", th:"Username", en:"Deliverect Login ID", required:true, placeholder:"เช่น siamgrillla_dlv"},
+            {id:"password", th:"Password", required:true, placeholder:"เช่น Welcome2026!"}
+          ]
+        }
+      ],
+      sample: {
+        owner_full_name:"Somchai Jaidee",
+        account_name:"Siam Grill LA",
+        login_id:"siamgrillla_dlv",
+        password:"Deliver2026!"
+      }
+    }
+  };
+
+  let activeKey = "blizzfull";
+
+  function esc(str){
+    return String(str ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  }
+
+  function allFields(t){
+    return t.groups.flatMap(g => g.fields);
+  }
+
+  function renderTabs(){
+    const bar = document.getElementById('tabBar');
+    bar.innerHTML = '';
+    Object.entries(TEMPLATES).forEach(([key, t]) => {
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn' + (key === activeKey ? ' active' : '');
+      btn.textContent = t.label;
+      btn.addEventListener('click', () => {
+        activeKey = key;
+        renderTabs();
+        renderForm();
+        renderPreview();
+      });
+      bar.appendChild(btn);
+    });
+  }
+
+  function renderForm(){
+    const t = TEMPLATES[activeKey];
+    document.getElementById('toolTitle').textContent = t.title;
+    const panel = document.getElementById('formPanel');
+    panel.innerHTML = '';
+    t.groups.forEach(g => {
+      const groupEl = document.createElement('div');
+      groupEl.className = 'group';
+
+      const h2 = document.createElement('h2');
+      h2.textContent = g.title;
+      groupEl.appendChild(h2);
+
+      g.fields.forEach(f => {
+        const fieldEl = document.createElement('div');
+        fieldEl.className = 'field';
+
+        const label = document.createElement('label');
+        const thSpan = document.createElement('span');
+        thSpan.textContent = f.th + (f.required ? ' *' : '');
+        label.appendChild(thSpan);
+        if(f.en){
+          const enSpan = document.createElement('span');
+          enSpan.className = 'en' + (f.required ? ' req' : '');
+          enSpan.textContent = f.en;
+          label.appendChild(enSpan);
+        }
+        fieldEl.appendChild(label);
+
+        const input = document.createElement('input');
+        input.type = f.type || 'text';
+        input.id = f.id;
+        input.placeholder = f.placeholder || '';
+        input.value = f.default || '';
+        input.addEventListener('input', renderPreview);
+        fieldEl.appendChild(input);
+
+        groupEl.appendChild(fieldEl);
+      });
+
+      if(g.hint){
+        const hint = document.createElement('p');
+        hint.className = 'hint';
+        hint.textContent = g.hint;
+        groupEl.appendChild(hint);
+      }
+
+      panel.appendChild(groupEl);
+    });
+  }
+
+  function buildHtml(){
+    const t = TEMPLATES[activeKey];
+    let out = document.getElementById(t.tplId).textContent;
+    allFields(t).forEach(f => {
+      const val = document.getElementById(f.id).value.trim();
+      const token = '{{' + f.id.toUpperCase() + '}}';
+      out = out.replaceAll(token, esc(val));
+    });
+    return out.trim();
+  }
+
+  function renderPreview(){
+    const t = TEMPLATES[activeKey];
+    document.getElementById('previewFrame').srcdoc = buildHtml();
+
+    const bar = document.getElementById('statusBar');
+    bar.innerHTML = '';
+    allFields(t).filter(f => f.required).forEach(f => {
+      const filled = !!document.getElementById(f.id).value.trim();
+      const span = document.createElement('span');
+      span.className = 'pill ' + (filled ? 'ok' : 'missing');
+      span.textContent = (filled ? '✓ ' : '✗ ') + f.th;
+      bar.appendChild(span);
+    });
+  }
+
+  function showToast(msg){
+    const tEl = document.getElementById('toast');
+    tEl.textContent = msg;
+    tEl.classList.add('show');
+    setTimeout(() => tEl.classList.remove('show'), 1800);
+  }
+
+  document.getElementById('btnCopy').addEventListener('click', async () => {
+    const html = buildHtml();
+    try{
+      await navigator.clipboard.writeText(html);
+      showToast('✅ Copy HTML แล้ว — ไปวางใน Zoho ได้เลย');
+    }catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = html;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('✅ Copy HTML แล้ว');
+    }
+  });
+
+  document.getElementById('btnDownload').addEventListener('click', () => {
+    const html = buildHtml();
+    const blob = new Blob([html], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const accountField = document.getElementById('account_name');
+    const safeName = ((accountField && accountField.value) || activeKey + '-welcome-email')
+      .toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    a.href = url;
+    a.download = safeName + '.html';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('btnSample').addEventListener('click', () => {
+    const t = TEMPLATES[activeKey];
+    Object.entries(t.sample).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    });
+    renderPreview();
+  });
+
+  document.getElementById('btnClear').addEventListener('click', () => {
+    renderForm();
+    renderPreview();
+  });
+
+  renderTabs();
+  renderForm();
+  renderPreview();
+</script>
+
+</body>
+</html>
