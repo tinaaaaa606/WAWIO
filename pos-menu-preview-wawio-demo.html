@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Menu Preview – WAWIO Demo</title>
+<style>
+  :root {
+    --nav: #1d3f73; --nav2: #16335f; --ticket: #a9d3e3; --ticket-head: #5aa0a8; --total: #1764b5;
+    --panel: #ffffff; --bar: #e3e5e8; --ink: #111827; --muted: #6b7280; --green: #12b81c; --red: #d93131;
+    --pink: #f07fe6; --gap: 4px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0f1d33; color: var(--ink);
+    font-family: Arial, Helvetica, sans-serif; -webkit-tap-highlight-color: transparent; }
+  button { font-family: inherit; cursor: pointer; border: 0; }
+  .app { height: 100dvh; display: grid; grid-template-rows: 34px 1fr auto; background: #fff; max-width: 1400px; margin: 0 auto; }
+
+  /* top bar */
+  .top { background: linear-gradient(var(--nav), var(--nav2)); color: #fff; display: flex; align-items: center;
+    gap: 16px; padding: 0 12px; font-size: 14px; font-weight: bold; white-space: nowrap; overflow: hidden; }
+  .top .brand { color: #ffd34d; }
+  .top .rest { flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; }
+  .top .note { font-weight: normal; font-size: 12px; color: #c7d6ef; }
+
+  /* main area */
+  .main { display: grid; grid-template-columns: minmax(260px, 33%) minmax(170px, 22%) 1fr; gap: 6px; padding: 6px; min-height: 0; background: #f3f4f6; }
+
+  /* ticket */
+  .ticket { display: grid; grid-template-rows: auto 1fr auto auto; min-height: 0; background: #fff; border: 1px solid #c9d3dc; }
+  .ticket .head { background: var(--ticket-head); color: #fff; font-size: 12px; padding: 6px 8px; display: flex; justify-content: space-between; }
+  .lines { background: #fff; overflow-y: auto; min-height: 0; }
+  .line { display: grid; grid-template-columns: 1fr auto 28px; gap: 6px; padding: 6px 8px; border-bottom: 1px solid #eef2f5; font-size: 14px; }
+  .line .mods { grid-column: 1 / 3; color: #374151; font-size: 12.5px; padding-left: 14px; }
+  .line .mods div { display: flex; justify-content: space-between; }
+  .line .x { grid-row: 1; grid-column: 3; background: #fde2e2; color: var(--red); border-radius: 4px; font-weight: bold; height: 24px; }
+  .empty-ticket { color: var(--muted); font-size: 13px; padding: 14px 10px; line-height: 1.5; }
+  .sub { background: var(--ticket); padding: 6px 8px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; }
+  .tot { background: var(--total); color: #fff; padding: 8px; font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; }
+
+  /* grids */
+  .col { display: grid; grid-template-rows: auto 1fr auto; min-height: 0; gap: 4px; }
+  .colhead { background: #cdeef0; padding: 8px; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+  .grid { display: grid; gap: var(--gap); min-height: 0; }
+  .btn { border-radius: 2px; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; line-height: 1.12; position: relative; overflow: hidden; word-break: break-word; min-height: 0;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); transition: filter .1s; }
+  .btn:active { filter: brightness(.88); }
+  .btn.sel { outline: 2px solid #1764b5; outline-offset: -2px; }
+  .btn .nm { font-size: clamp(12px, 1.55vw, 20px); }
+  .gbtn .nm { font-size: clamp(12px, 1.4vw, 19px); }
+  .btn.long .nm { font-size: clamp(11px, 1.2vw, 16px); }
+  .btn .pr { font-size: 11px; opacity: .75; margin-top: 3px; font-weight: bold; }
+  .btn .zero { position: absolute; top: 0; right: 0; background: var(--red); color: #fff; font-size: 10px; font-weight: bold; padding: 2px 4px; }
+  .btn .flag { position: absolute; top: 2px; left: 3px; font-size: 13px; }
+  .pager { display: flex; gap: 4px; justify-content: space-between; }
+  .pager button { flex: 1; background: #fff; border: 1px solid #c9d3dc; color: #8fb3e6; font-size: 18px; padding: 6px 0; }
+  .pager button:disabled { opacity: .35; cursor: default; }
+  .pager span { align-self: center; font-size: 12px; color: var(--muted); padding: 0 6px; white-space: nowrap; }
+  .reporting .ibtn { box-shadow: inset 0 0 0 3px var(--pink); }
+
+  /* bottom bar */
+  .bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; padding: 6px; background: #f3f4f6; border-top: 1px solid #dde1e6; }
+  .bar button { background: var(--bar); padding: 12px 6px; font-size: 14px; border-radius: 2px; color: #1f2937; }
+  .bar .report.on { background: var(--pink); color: #fff; }
+  .bar .changes { background: var(--total); color: #fff; }
+  .bar .approve { background: var(--green); color: #fff; font-weight: bold; }
+  .bar .count { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--red); color: #fff; font-size: 12px; margin-left: 4px; }
+
+  /* modal */
+  .ov { position: fixed; inset: 0; background: rgba(15, 23, 42, .55); display: none; align-items: center; justify-content: center; z-index: 20; padding: 10px; }
+  .ov.show { display: flex; }
+  .modal { background: #fff; width: min(980px, 100%); max-height: 94dvh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+  .modal .mt { font-size: 12px; padding: 6px 10px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; }
+  .fc { display: grid; grid-template-columns: 250px 1fr; gap: 12px; padding: 10px; min-height: 360px; overflow: auto; }
+  .fc .left { border-right: 1px solid #eef0f3; padding-right: 10px; font-size: 14px; }
+  .fc .left .ln { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: center; }
+  .fc .left .qty { border: 1px solid #9ca3af; border-radius: 4px; text-align: center; padding: 6px 0; }
+  .fc .left .picked { margin-top: 8px; font-size: 13px; color: #374151; }
+  .fc .left .picked div { display: flex; justify-content: space-between; padding: 2px 0 2px 38px; }
+  .fc .left .desc { margin-top: 12px; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .step-title { text-decoration: underline; font-size: 16px; margin: 2px 0 4px; }
+  .step-rule { font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
+  .step-rule b { color: var(--red); }
+  .choices { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+  .choice { min-height: 70px; font-size: 16px; color: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px; text-align: center; }
+  .choice small { font-size: 11px; font-weight: bold; margin-top: 4px; opacity: .8; }
+  .choice.on { outline: 3px solid #1d3f73; outline-offset: -3px; filter: brightness(.9); }
+  .steps-dots { display: flex; gap: 4px; margin-bottom: 8px; }
+  .steps-dots i { width: 22px; height: 4px; background: #d1d5db; border-radius: 2px; }
+  .steps-dots i.done { background: #1764b5; }
+  .mfoot { display: flex; gap: 8px; justify-content: flex-end; padding: 10px; border-top: 1px solid #eef0f3; flex-wrap: wrap; }
+  .mfoot button { padding: 14px 22px; font-size: 16px; border-radius: 2px; }
+  .mfoot .ghost { background: var(--bar); }
+  .mfoot .cancel { background: var(--red); color: #fff; min-width: 120px; }
+  .mfoot .done { background: var(--green); color: #fff; min-width: 140px; font-weight: bold; }
+  .mfoot .done:disabled { opacity: .45; cursor: default; }
+  .mfoot .rep { margin-right: auto; background: #fde7fb; color: #9d1a8e; }
+  .pad { padding: 16px; font-size: 15px; line-height: 1.55; overflow: auto; }
+  .pad h2 { margin: 0 0 10px; font-size: 20px; }
+  .pad textarea { width: 100%; min-height: 110px; font: inherit; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; }
+  .issue { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 8px 0; border-bottom: 1px solid #eef0f3; }
+  .issue b { display: block; }
+  .issue button { background: #fde2e2; color: var(--red); padding: 6px 10px; border-radius: 4px; }
+  .hint { background: #fef3c7; padding: 10px 12px; border-radius: 6px; font-size: 14px; }
+  .steps-help { padding-left: 20px; }
+  .steps-help li { margin-bottom: 6px; }
+
+  /* mobile */
+  .mobile-only { display: none; }
+  @media (max-width: 820px) {
+    .app { grid-template-rows: 34px auto 1fr auto; height: 100dvh; }
+    .top .note { display: none; }
+    .main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; padding: 4px; gap: 4px; overflow: hidden; }
+    .ticket { display: none; }
+    .ticket.open { display: grid; position: fixed; inset: 34px 0 0 0; z-index: 15; }
+    .col.groups .colhead, .col.groups .pager { display: none; }
+    .col.groups .grid { display: flex !important; overflow-x: auto; gap: 4px; padding-bottom: 2px; }
+    .col.groups .gbtn { flex: 0 0 auto; min-width: 104px; height: 52px; }
+    .col.items { min-height: 0; }
+    .col.items .grid { grid-template-columns: repeat(2, 1fr) !important; grid-auto-rows: 74px; grid-template-rows: none !important; overflow-y: auto; align-content: start; }
+    .col.items .grid .ibtn { grid-row: auto !important; grid-column: auto !important; }
+    .col.items .grid .blank { display: none; }
+    .col.items .pager { display: none; }
+    .btn .nm { font-size: 15px; }
+    .mobile-only { display: flex; }
+    .orderbar { background: var(--total); color: #fff; padding: 10px 12px; font-weight: bold; justify-content: space-between; align-items: center; }
+    .orderbar button { background: rgba(255,255,255,.18); color: #fff; padding: 6px 10px; border-radius: 4px; }
+    .bar { grid-template-columns: repeat(2, 1fr); }
+    .bar .clear, .bar .issues { display: none; }
+    .bar .report { grid-column: 1 / 3; }
+    .fc { grid-template-columns: 1fr; min-height: 0; }
+    .fc .left { border-right: 0; border-bottom: 1px solid #eef0f3; padding: 0 0 8px; }
+    .choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .choice { min-height: 58px; }
+    .mfoot button { flex: 1; padding: 13px 10px; }
+    .mfoot .rep { flex-basis: 100%; }
+    .ticket .closeT { display: inline-block !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top">
+    <span class="brand">Menu Preview</span>
+    <span class="rest" id="restName"></span>
+    <span class="note">For menu review only – not a real order</span>
+  </div>
+
+  <div class="main" id="main">
+    <section class="ticket" id="ticket">
+      <div class="head"><span>Sample Order · Dine In</span><span><button class="closeT" style="display:none;background:none;color:#fff;font-size:14px" onclick="toggleTicket(false)">Close ✕</button></span></div>
+      <div class="lines" id="lines"></div>
+      <div class="sub"><span>Sub Total</span><span id="subTotal">$0.00</span></div>
+      <div class="tot"><span>Total</span><span id="total">$0.00</span></div>
+    </section>
+
+    <section class="col groups">
+      <div class="colhead"><span>MENU</span></div>
+      <div class="grid" id="groupGrid"></div>
+      <div class="pager"><button id="gPrev">◀</button><span id="gPageLbl"></span><button id="gNext">▶</button></div>
+    </section>
+
+    <section class="col items" id="itemsCol">
+      <div class="colhead"><span id="groupTitle"></span><span style="font-size:12px;color:#6b7280">Tap an item to try it</span></div>
+      <div class="grid" id="itemGrid"></div>
+      <div class="pager"><button id="iPrev">◀</button><span id="iPageLbl"></span><button id="iNext">▶</button></div>
+    </section>
+  </div>
+
+  <div class="orderbar mobile-only" id="orderbar"><span id="mobTotal">Order · $0.00</span><button onclick="toggleTicket(true)">View order</button></div>
+
+  <div class="bar">
+    <button class="clear" onclick="clearOrder()">Clear Order</button>
+    <button class="report" id="reportBtn" onclick="toggleReport()">🚩 Report an Issue</button>
+    <button class="issues" onclick="openIssues()">Issues<span class="count" id="issueCount">0</span></button>
+    <button class="changes" onclick="openIssues()">Request Changes</button>
+    <button class="approve" onclick="openApprove()">Approve Menu</button>
+  </div>
+</div>
+
+<div class="ov" id="ov"><div class="modal" id="modal"></div></div>
+
+<script>
+const DATA = {"restaurant":"WAWIO Demo","groupGrid":{"cols":2,"rows":8,"pages":2},"itemGrid":{"cols":4,"rows":8},"groups":[{"id":103,"name":"STARTER","page":1,"row":1,"col":1,"bg":"#FBF8CC","fg":"#000000"},{"id":104,"name":"SOUP","page":1,"row":1,"col":2,"bg":"#FDE4CF","fg":"#000000"},{"id":105,"name":"SALAD SLI","page":1,"row":2,"col":1,"bg":"#FFCFD2","fg":"#000000"},{"id":106,"name":"ENTREE","page":1,"row":2,"col":2,"bg":"#F1C0E8","fg":"#000000"},{"id":107,"name":"NOODLE & FRIED RICE","page":1,"row":3,"col":1,"bg":"#CFBAF0","fg":"#000000"},{"id":114,"name":"THAI LUNCH SPECIAL","page":1,"row":3,"col":2,"bg":"#A3C4F3","fg":"#000000"},{"id":108,"name":"NIGIRI","page":1,"row":4,"col":1,"bg":"#90DBF4","fg":"#000000"},{"id":110,"name":"SASHIMI","page":1,"row":4,"col":2,"bg":"#8EECF5","fg":"#000000"},{"id":111,"name":"BASIC ROLLS","page":1,"row":5,"col":1,"bg":"#98F5E1","fg":"#000000"},{"id":112,"name":"SPECIALTY ROLLS","page":1,"row":5,"col":2,"bg":"#B9FBC0","fg":"#000000"},{"id":113,"name":"SUSHI COMBO","page":1,"row":6,"col":1,"bg":"#FBF8CC","fg":"#000000"},{"id":116,"name":"SUSHI LUNCH","page":1,"row":6,"col":2,"bg":"#FDE4CF","fg":"#000000"},{"id":117,"name":"DRINK","page":1,"row":7,"col":1,"bg":"#FFCFD2","fg":"#000000"},{"id":122,"name":"Glass Wine","page":1,"row":7,"col":2,"bg":"#F1C0E8","fg":"#000000"},{"id":124,"name":"Signature Drink","page":1,"row":8,"col":1,"bg":"#CFBAF0","fg":"#000000"},{"id":120,"name":"Beer","page":1,"row":8,"col":2,"bg":"#A3C4F3","fg":"#000000"},{"id":121,"name":"Sake","page":2,"row":1,"col":1,"bg":"#FF6347","fg":"#000000"},{"id":129,"name":"SPECIAL","page":2,"row":1,"col":2,"bg":"#FF6347","fg":"#000000"},{"id":118,"name":"LIQUOR","page":2,"row":2,"col":1,"bg":"#FF6347","fg":"#000000"},{"id":127,"name":"SIDE ORDER","page":2,"row":2,"col":2,"bg":"#FF7F50","fg":"#000000"},{"id":123,"name":"Bottle Wine","page":2,"row":3,"col":1,"bg":"#FF6347","fg":"#000000"},{"id":131,"name":"PROMOTION","page":2,"row":3,"col":2,"bg":"#00FF00","fg":"#000000"},{"id":149,"name":"PAD THAI","page":2,"row":5,"col":1,"bg":"#00FFFF","fg":"#000000"},{"id":150,"name":"KHAO SOI","page":2,"row":5,"col":2,"bg":"#9ACCFF","fg":"#000000"}],"layout":{"103":[{"id":10001,"page":1,"row":1,"col":1,"bg":"#F94144","fg":"#FFFFFF"},{"id":10002,"page":1,"row":1,"col":2,"bg":"#F3722C","fg":"#FFFFFF"},{"id":10003,"page":1,"row":1,"col":3,"bg":"#F8961E","fg":"#FFFFFF"},{"id":10004,"page":1,"row":1,"col":4,"bg":"#F9844A","fg":"#FFFFFF"},{"id":10005,"page":1,"row":2,"col":1,"bg":"#F9C74F","fg":"#000000"},{"id":10006,"page":1,"row":2,"col":2,"bg":"#90BE6D","fg":"#000000"},{"id":10007,"page":1,"row":2,"col":3,"bg":"#43AA8B","fg":"#000000"},{"id":10008,"page":1,"row":2,"col":4,"bg":"#4D908E","fg":"#FFFFFF"},{"id":10258,"page":1,"row":3,"col":1,"bg":"#577590","fg":"#FFFFFF"},{"id":10247,"page":1,"row":3,"col":2,"bg":"#277DA1","fg":"#FFFFFF"},{"id":10233,"page":1,"row":3,"col":3,"bg":"#F94144","fg":"#FFFFFF"},{"id":10251,"page":1,"row":3,"col":4,"bg":"#F3722C","fg":"#FFFFFF"},{"id":10245,"page":1,"row":4,"col":1,"bg":"#F8961E","fg":"#FFFFFF"},{"id":10214,"page":1,"row":4,"col":2,"bg":"#F9844A","fg":"#FFFFFF"},{"id":10332,"page":1,"row":8,"col":1,"bg":"#F9844A","fg":"#000000"}],"104":[{"id":10009,"page":1,"row":1,"col":1,"bg":"#B0E0E6","fg":"#000000"},{"id":10010,"page":1,"row":1,"col":2,"bg":"#B0E0E6","fg":"#000000"},{"id":10011,"page":1,"row":1,"col":3,"bg":"#B0E0E6","fg":"#000000"},{"id":10249,"page":1,"row":2,"col":3,"bg":"#F0E68C","fg":"#000000"}],"105":[{"id":10012,"page":1,"row":1,"col":1,"bg":"#B0E0E6","fg":"#000000"},{"id":10013,"page":1,"row":1,"col":2,"bg":"#B0E0E6","fg":"#000000"},{"id":10014,"page":1,"row":1,"col":3,"bg":"#B0E0E6","fg":"#000000"},{"id":10015,"page":1,"row":3,"col":1,"bg":"#7FFF00","fg":"#000000"},{"id":10016,"page":1,"row":3,"col":2,"bg":"#7FFF00","fg":"#000000"}],"106":[{"id":10017,"page":1,"row":1,"col":1,"bg":"#B0E0E6","fg":"#000000"},{"id":10018,"page":1,"row":1,"col":2,"bg":"#B0E0E6","fg":"#000000"},{"id":10215,"page":1,"row":1,"col":3,"bg":"#B0E0E6","fg":"#000000"},{"id":10020,"page":1,"row":1,"col":4,"bg":"#B0E0E6","fg":"#000000"},{"id":10216,"page":1,"row":2,"col":1,"bg":"#B0E0E6","fg":"#000000"},{"id":10022,"page":1,"row":2,"col":2,"bg":"#B0E0E6","fg":"#000000"},{"id":10023,"page":1,"row":2,"col":3,"bg":"#B0E0E6","fg":"#000000"},{"id":10262,"page":1,"row":2,"col":4,"bg":"#ADD8E6","fg":"#000000"},{"id":10019,"page":1,"row":3,"col":1,"bg":"#B0E0E6","fg":"#000000"},{"id":10021,"page":1,"row":3,"col":2,"bg":"#B0E0E6","fg":"#000000"},{"id":10221,"page":1,"row":3,"col":3,"bg":"#B0E0E6","fg":"#000000"},{"id":10242,"page":1,"row":3,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10243,"page":1,"row":4,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10024,"page":1,"row":5,"col":1,"bg":"#FF0000","fg":"#000000"},{"id":10136,"page":1,"row":5,"col":2,"bg":"#9ACD32","fg":"#000000"},{"id":10134,"page":1,"row":5,"col":3,"bg":"#FFFF00","fg":"#000000"},{"id":10135,"page":1,"row":5,"col":4,"bg":"#FF8C00","fg":"#000000"},{"id":10137,"page":1,"row":6,"col":1,"bg":"#A0522D","fg":"#000000"},{"id":10190,"page":1,"row":7,"col":3,"bg":"#FF4500","fg":"#000000"},{"id":10200,"page":1,"row":8,"col":1,"bg":"#FF4500","fg":"#000000"},{"id":10201,"page":1,"row":8,"col":2,"bg":"#FF4500","fg":"#000000"},{"id":10202,"page":1,"row":8,"col":3,"bg":"#FF4500","fg":"#000000"},{"id":10203,"page":1,"row":8,"col":4,"bg":"#FF4500","fg":"#000000"}],"107":[{"id":10025,"page":1,"row":1,"col":1,"bg":"#B0E0E6","fg":"#000000"},{"id":10026,"page":1,"row":1,"col":2,"bg":"#B0E0E6","fg":"#000000"},{"id":10027,"page":1,"row":1,"col":3,"bg":"#B0E0E6","fg":"#000000"},{"id":10253,"page":1,"row":1,"col":4,"bg":"#B0E0E6","fg":"#000000"},{"id":10234,"page":1,"row":2,"col":4,"bg":"#B0E0E6","fg":"#000000"},{"id":10028,"page":1,"row":3,"col":1,"bg":"#B0E0E6","fg":"#000000"},{"id":10029,"page":1,"row":3,"col":2,"bg":"#B0E0E6","fg":"#000000"},{"id":10030,"page":1,"row":3,"col":3,"bg":"#B0E0E6","fg":"#000000"},{"id":10190,"page":1,"row":5,"col":2,"bg":"#FF4500","fg":"#000000"},{"id":10200,"page":1,"row":7,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10201,"page":1,"row":7,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10202,"page":1,"row":7,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10203,"page":1,"row":7,"col":4,"bg":"#F0E68C","fg":"#000000"}],"108":[{"id":10031,"page":1,"row":1,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10032,"page":1,"row":1,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10033,"page":1,"row":1,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10034,"page":1,"row":1,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10035,"page":1,"row":2,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10036,"page":1,"row":2,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10037,"page":1,"row":2,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10038,"page":1,"row":2,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10039,"page":1,"row":3,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10040,"page":1,"row":3,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10041,"page":1,"row":3,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10042,"page":1,"row":3,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10043,"page":1,"row":4,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10044,"page":1,"row":4,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10192,"page":1,"row":6,"col":1,"bg":"#DDA0DD","fg":"#000000"},{"id":10191,"page":1,"row":6,"col":3,"bg":"#FF4500","fg":"#000000"}],"110":[{"id":10045,"page":1,"row":1,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10046,"page":1,"row":1,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10047,"page":1,"row":1,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10048,"page":1,"row":1,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10049,"page":1,"row":2,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10050,"page":1,"row":2,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10052,"page":1,"row":2,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10053,"page":1,"row":2,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10054,"page":1,"row":3,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10055,"page":1,"row":3,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10056,"page":1,"row":3,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10057,"page":1,"row":3,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10058,"page":1,"row":4,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10059,"page":1,"row":4,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10244,"page":1,"row":5,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10192,"page":1,"row":6,"col":1,"bg":"#DDA0DD","fg":"#000000"},{"id":10191,"page":1,"row":6,"col":3,"bg":"#FF4500","fg":"#000000"}],"111":[{"id":10060,"page":1,"row":1,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10061,"page":1,"row":1,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10062,"page":1,"row":1,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10198,"page":1,"row":1,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10064,"page":1,"row":2,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10065,"page":1,"row":2,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10066,"page":1,"row":2,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10067,"page":1,"row":2,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10068,"page":1,"row":3,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10071,"page":1,"row":3,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10070,"page":1,"row":3,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10069,"page":1,"row":3,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10073,"page":1,"row":4,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10204,"page":1,"row":4,"col":2,"bg":"#F5DEB3","fg":"#000000"},{"id":10063,"page":1,"row":4,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10235,"page":1,"row":4,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10192,"page":1,"row":6,"col":1,"bg":"#DDA0DD","fg":"#000000"},{"id":10191,"page":1,"row":6,"col":3,"bg":"#FF4500","fg":"#000000"}],"112":[{"id":10074,"page":1,"row":1,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10075,"page":1,"row":1,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10076,"page":1,"row":1,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10077,"page":1,"row":1,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10078,"page":1,"row":2,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10079,"page":1,"row":2,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10259,"page":1,"row":2,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10081,"page":1,"row":2,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10260,"page":1,"row":3,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10217,"page":1,"row":3,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10218,"page":1,"row":3,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10219,"page":1,"row":3,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10261,"page":1,"row":4,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10238,"page":1,"row":4,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10080,"page":1,"row":4,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10082,"page":1,"row":4,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10236,"page":1,"row":5,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10192,"page":1,"row":5,"col":3,"bg":"#DDA0DD","fg":"#000000"},{"id":10220,"page":1,"row":6,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10083,"page":1,"row":6,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10244,"page":1,"row":6,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10191,"page":1,"row":7,"col":3,"bg":"#FF4500","fg":"#000000"},{"id":10199,"page":1,"row":8,"col":1,"bg":"#DDA0DD","fg":"#000000"},{"id":10200,"page":1,"row":8,"col":2,"bg":"#DDA0DD","fg":"#000000"},{"id":10201,"page":1,"row":8,"col":3,"bg":"#DDA0DD","fg":"#000000"},{"id":10202,"page":1,"row":8,"col":4,"bg":"#DDA0DD","fg":"#000000"}],"113":[{"id":10084,"page":1,"row":1,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10085,"page":1,"row":1,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10086,"page":1,"row":1,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10087,"page":1,"row":3,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10089,"page":1,"row":3,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10088,"page":1,"row":3,"col":3,"bg":"#F0E68C","fg":"#000000"},{"id":10192,"page":1,"row":5,"col":1,"bg":"#DDA0DD","fg":"#000000"},{"id":10191,"page":1,"row":5,"col":3,"bg":"#FF4500","fg":"#000000"}],"114":[{"id":10090,"page":1,"row":1,"col":1,"bg":"#FFC0CB","fg":"#000000"},{"id":10092,"page":1,"row":1,"col":2,"bg":"#FFC0CB","fg":"#000000"},{"id":10093,"page":1,"row":1,"col":3,"bg":"#FFC0CB","fg":"#000000"},{"id":10094,"page":1,"row":1,"col":4,"bg":"#FFC0CB","fg":"#000000"},{"id":10095,"page":1,"row":3,"col":1,"bg":"#FFC0CB","fg":"#000000"},{"id":10096,"page":1,"row":3,"col":2,"bg":"#FFC0CB","fg":"#000000"},{"id":10097,"page":1,"row":3,"col":3,"bg":"#FFC0CB","fg":"#000000"},{"id":10098,"page":1,"row":3,"col":4,"bg":"#FFC0CB","fg":"#000000"},{"id":10208,"page":1,"row":5,"col":1,"bg":"#FFC0CB","fg":"#000000"},{"id":10209,"page":1,"row":5,"col":2,"bg":"#FFC0CB","fg":"#000000"},{"id":10210,"page":1,"row":5,"col":3,"bg":"#FFC0CB","fg":"#000000"},{"id":10190,"page":1,"row":7,"col":2,"bg":"#FF4500","fg":"#000000"}],"116":[{"id":10099,"page":1,"row":1,"col":1,"bg":"#FFC0CB","fg":"#000000"},{"id":10100,"page":1,"row":1,"col":2,"bg":"#FFC0CB","fg":"#000000"},{"id":10101,"page":1,"row":1,"col":3,"bg":"#FFC0CB","fg":"#000000"},{"id":10211,"page":1,"row":1,"col":4,"bg":"#FFC0CB","fg":"#000000"},{"id":10212,"page":1,"row":2,"col":1,"bg":"#FFC0CB","fg":"#000000"},{"id":10213,"page":1,"row":2,"col":2,"bg":"#FFC0CB","fg":"#000000"},{"id":10237,"page":1,"row":2,"col":3,"bg":"#FFC0CB","fg":"#000000"},{"id":10192,"page":1,"row":4,"col":1,"bg":"#DDA0DD","fg":"#000000"},{"id":10191,"page":1,"row":4,"col":3,"bg":"#FF4500","fg":"#000000"}],"117":[{"id":10102,"page":1,"row":1,"col":1,"bg":"#90EE90","fg":"#000000"},{"id":10103,"page":1,"row":1,"col":2,"bg":"#90EE90","fg":"#000000"},{"id":10104,"page":1,"row":1,"col":3,"bg":"#90EE90","fg":"#000000"},{"id":10105,"page":1,"row":1,"col":4,"bg":"#90EE90","fg":"#000000"},{"id":10230,"page":1,"row":2,"col":1,"bg":"#00FA9A","fg":"#000000"},{"id":10248,"page":1,"row":2,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10106,"page":1,"row":3,"col":1,"bg":"#90EE90","fg":"#000000"},{"id":10107,"page":1,"row":3,"col":2,"bg":"#90EE90","fg":"#000000"},{"id":10108,"page":1,"row":3,"col":3,"bg":"#90EE90","fg":"#000000"},{"id":10109,"page":1,"row":3,"col":4,"bg":"#90EE90","fg":"#000000"},{"id":10255,"page":1,"row":4,"col":2,"bg":"#B0E0E6","fg":"#000000"},{"id":10307,"page":1,"row":6,"col":1,"bg":"#000000","fg":"#000000"}],"118":[{"id":10205,"page":1,"row":1,"col":1,"bg":"#F5DEB3","fg":"#000000"},{"id":10111,"page":1,"row":1,"col":2,"bg":"#FFA07A","fg":"#000000"},{"id":10112,"page":1,"row":1,"col":3,"bg":"#FFA07A","fg":"#000000"},{"id":10113,"page":1,"row":1,"col":4,"bg":"#FFA07A","fg":"#000000"},{"id":10114,"page":1,"row":2,"col":1,"bg":"#FFA07A","fg":"#000000"},{"id":10115,"page":1,"row":2,"col":2,"bg":"#FFA07A","fg":"#000000"},{"id":10130,"page":1,"row":2,"col":3,"bg":"#FFA07A","fg":"#000000"},{"id":10117,"page":1,"row":2,"col":4,"bg":"#FFA07A","fg":"#000000"},{"id":10118,"page":1,"row":3,"col":1,"bg":"#FFA07A","fg":"#000000"},{"id":10124,"page":1,"row":3,"col":2,"bg":"#FFA07A","fg":"#000000"},{"id":10116,"page":1,"row":3,"col":3,"bg":"#FFA07A","fg":"#000000"},{"id":10127,"page":1,"row":3,"col":4,"bg":"#FFA07A","fg":"#000000"},{"id":10120,"page":1,"row":4,"col":1,"bg":"#FFA07A","fg":"#000000"},{"id":10119,"page":1,"row":4,"col":2,"bg":"#FFA07A","fg":"#000000"},{"id":10276,"page":1,"row":4,"col":3,"bg":"#FFA07A","fg":"#000000"},{"id":10226,"page":1,"row":4,"col":4,"bg":"#E9967A","fg":"#000000"},{"id":10250,"page":1,"row":5,"col":1,"bg":"#FFA07A","fg":"#000000"},{"id":10275,"page":1,"row":5,"col":2,"bg":"#FFA07A","fg":"#000000"},{"id":10280,"page":1,"row":5,"col":3,"bg":"#FFA07A","fg":"#000000"},{"id":10129,"page":1,"row":5,"col":4,"bg":"#FFA07A","fg":"#000000"},{"id":10122,"page":1,"row":6,"col":1,"bg":"#FFA07A","fg":"#000000"},{"id":10277,"page":1,"row":6,"col":2,"bg":"#FFA07A","fg":"#000000"},{"id":10228,"page":1,"row":6,"col":3,"bg":"#E9967A","fg":"#000000"},{"id":10121,"page":1,"row":6,"col":4,"bg":"#FFA07A","fg":"#000000"},{"id":10126,"page":1,"row":7,"col":1,"bg":"#48D1CC","fg":"#000000"},{"id":10110,"page":1,"row":7,"col":2,"bg":"#FFA07A","fg":"#000000"},{"id":10125,"page":1,"row":7,"col":3,"bg":"#FFA07A","fg":"#000000"},{"id":10283,"page":1,"row":7,"col":4,"bg":"#FFA07A","fg":"#000000"},{"id":10241,"page":1,"row":8,"col":1,"bg":"#F0E68C","fg":"#000000"},{"id":10128,"page":1,"row":8,"col":2,"bg":"#FFA07A","fg":"#000000"},{"id":10282,"page":1,"row":8,"col":3,"bg":"#FFA07A","fg":"#000000"},{"id":10284,"page":2,"row":1,"col":1,"bg":"#40E0D0","fg":"#000000"},{"id":10285,"page":2,"row":1,"col":2,"bg":"#40E0D0","fg":"#000000"},{"id":10123,"page":2,"row":1,"col":3,"bg":"#40E0D0","fg":"#000000"},{"id":10287,"page":2,"row":1,"col":4,"bg":"#FFA07A","fg":"#000000"},{"id":10288,"page":2,"row":2,"col":1,"bg":"#FFA07A","fg":"#000000"},{"id":10294,"page":2,"row":2,"col":2,"bg":"#FFA07A","fg":"#000000"},{"id":10295,"page":2,"row":2,"col":3,"bg":"#FFA07A","fg":"#000000"},{"id":10286,"page":2,"row":2,"col":4,"bg":"#FFA07A","fg":"#000000"},{"id":10292,"page":2,"row":3,"col":1,"bg":"#40E0D0","fg":"#000000"},{"id":10293,"page":2,"row":3,"col":2,"bg":"#40E0D0","fg":"#000000"},{"id":10289,"page":2,"row":3,"col":3,"bg":"#40E0D0","fg":"#000000"},{"id":10290,"page":2,"row":3,"col":4,"bg":"#40E0D0","fg":"#000000"},{"id":10291,"page":2,"row":4,"col":1,"bg":"#40E0D0","fg":"#000000"}],"120":[{"id":10138,"page":1,"row":1,"col":1,"bg":"#6495ED","fg":"#000000"},{"id":10139,"page":1,"row":1,"col":2,"bg":"#6495ED","fg":"#000000"},{"id":10140,"page":1,"row":1,"col":3,"bg":"#6495ED","fg":"#000000"},{"id":10141,"page":1,"row":1,"col":4,"bg":"#6495ED","fg":"#000000"},{"id":10142,"page":1,"row":2,"col":1,"bg":"#6495ED","fg":"#000000"},{"id":10143,"page":1,"row":2,"col":2,"bg":"#6495ED","fg":"#000000"},{"id":10144,"page":1,"row":2,"col":3,"bg":"#6495ED","fg":"#000000"},{"id":10145,"page":1,"row":2,"col":4,"bg":"#6495ED","fg":"#000000"},{"id":10224,"page":1,"row":3,"col":1,"bg":"#6495ED","fg":"#000000"},{"id":10231,"page":1,"row":3,"col":2,"bg":"#6495ED","fg":"#000000"},{"id":10257,"page":1,"row":3,"col":3,"bg":"#F5DEB3","fg":"#000000"}],"121":[{"id":10146,"page":1,"row":1,"col":1,"bg":"#6495ED","fg":"#000000"},{"id":10147,"page":1,"row":1,"col":2,"bg":"#6495ED","fg":"#000000"},{"id":10148,"page":1,"row":1,"col":3,"bg":"#6495ED","fg":"#000000"},{"id":10149,"page":1,"row":1,"col":4,"bg":"#6495ED","fg":"#000000"},{"id":10150,"page":1,"row":2,"col":1,"bg":"#6495ED","fg":"#000000"},{"id":10151,"page":1,"row":2,"col":2,"bg":"#6495ED","fg":"#000000"}],"122":[{"id":10152,"page":1,"row":1,"col":1,"bg":"#FFE4B5","fg":"#000000"},{"id":10153,"page":1,"row":1,"col":2,"bg":"#FFDAB9","fg":"#000000"},{"id":10154,"page":1,"row":1,"col":3,"bg":"#FFEFD5","fg":"#000000"},{"id":10155,"page":1,"row":1,"col":4,"bg":"#FFDEAD","fg":"#000000"},{"id":10254,"page":1,"row":2,"col":1,"bg":"#B0E0E6","fg":"#000000"},{"id":10156,"page":1,"row":3,"col":1,"bg":"#FF0000","fg":"#000000"},{"id":10157,"page":1,"row":3,"col":2,"bg":"#FF6347","fg":"#000000"},{"id":10158,"page":1,"row":3,"col":3,"bg":"#FF0000","fg":"#000000"},{"id":10159,"page":1,"row":3,"col":4,"bg":"#FF6347","fg":"#000000"},{"id":10168,"page":1,"row":5,"col":1,"bg":"#FFC0CB","fg":"#000000"},{"id":10169,"page":1,"row":5,"col":2,"bg":"#FF0000","fg":"#000000"}],"123":[{"id":10160,"page":1,"row":1,"col":1,"bg":"#EEE8AA","fg":"#000000"},{"id":10161,"page":1,"row":1,"col":2,"bg":"#FFDEAD","fg":"#000000"},{"id":10162,"page":1,"row":1,"col":3,"bg":"#FFDEAD","fg":"#000000"},{"id":10163,"page":1,"row":1,"col":4,"bg":"#F5DEB3","fg":"#000000"},{"id":10164,"page":1,"row":2,"col":1,"bg":"#FF6347","fg":"#000000"},{"id":10165,"page":1,"row":2,"col":2,"bg":"#FF0000","fg":"#000000"},{"id":10166,"page":1,"row":2,"col":3,"bg":"#FF6347","fg":"#000000"},{"id":10167,"page":1,"row":2,"col":4,"bg":"#FF0000","fg":"#000000"},{"id":10222,"page":1,"row":4,"col":1,"bg":"#B0E0E6","fg":"#000000"}],"124":[{"id":10170,"page":1,"row":1,"col":1,"bg":"#FF00FF","fg":"#000000"},{"id":10171,"page":1,"row":1,"col":2,"bg":"#FF4500","fg":"#000000"},{"id":10172,"page":1,"row":1,"col":3,"bg":"#F5DEB3","fg":"#000000"},{"id":10173,"page":1,"row":1,"col":4,"bg":"#FFFF00","fg":"#000000"},{"id":10256,"page":1,"row":2,"col":1,"bg":"#B0E0E6","fg":"#000000"},{"id":10175,"page":1,"row":2,"col":2,"bg":"#9ACD32","fg":"#000000"},{"id":10227,"page":1,"row":2,"col":3,"bg":"#E9967A","fg":"#000000"},{"id":10229,"page":1,"row":2,"col":4,"bg":"#E9967A","fg":"#000000"},{"id":10174,"page":1,"row":3,"col":1,"bg":"#F5DEB3","fg":"#000000"},{"id":10241,"page":1,"row":4,"col":2,"bg":"#F0E68C","fg":"#000000"}],"127":[{"id":10176,"page":1,"row":1,"col":1,"bg":"#F5DEB3","fg":"#000000"},{"id":10177,"page":1,"row":1,"col":2,"bg":"#F5DEB3","fg":"#000000"},{"id":10178,"page":1,"row":1,"col":3,"bg":"#F5DEB3","fg":"#000000"},{"id":10179,"page":1,"row":1,"col":4,"bg":"#F5DEB3","fg":"#000000"},{"id":10181,"page":1,"row":2,"col":1,"bg":"#F5DEB3","fg":"#000000"},{"id":10182,"page":1,"row":2,"col":2,"bg":"#F5DEB3","fg":"#000000"},{"id":10180,"page":1,"row":2,"col":3,"bg":"#F5DEB3","fg":"#000000"},{"id":10225,"page":1,"row":2,"col":4,"bg":"#B0E0E6","fg":"#000000"},{"id":10186,"page":1,"row":3,"col":1,"bg":"#F5DEB3","fg":"#000000"},{"id":10187,"page":1,"row":3,"col":2,"bg":"#F5DEB3","fg":"#000000"},{"id":10188,"page":1,"row":3,"col":3,"bg":"#F5DEB3","fg":"#000000"},{"id":10263,"page":1,"row":3,"col":4,"bg":"#B0E0E6","fg":"#000000"},{"id":10264,"page":1,"row":4,"col":1,"bg":"#FFDAB9","fg":"#000000"},{"id":10206,"page":1,"row":5,"col":1,"bg":"#98FB98","fg":"#000000"},{"id":10207,"page":1,"row":5,"col":2,"bg":"#98FB98","fg":"#000000"},{"id":10199,"page":1,"row":6,"col":1,"bg":"#B0E0E6","fg":"#000000"},{"id":10200,"page":1,"row":6,"col":2,"bg":"#B0E0E6","fg":"#000000"},{"id":10201,"page":1,"row":6,"col":3,"bg":"#B0E0E6","fg":"#000000"},{"id":10202,"page":1,"row":6,"col":4,"bg":"#B0E0E6","fg":"#000000"},{"id":10203,"page":1,"row":7,"col":1,"bg":"#B0E0E6","fg":"#000000"}],"129":[{"id":10183,"page":1,"row":1,"col":1,"bg":"#F08080","fg":"#000000"},{"id":10184,"page":1,"row":1,"col":2,"bg":"#808000","fg":"#000000"},{"id":10239,"page":1,"row":1,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10223,"page":1,"row":2,"col":1,"bg":"#B0E0E6","fg":"#000000"},{"id":10245,"page":1,"row":2,"col":2,"bg":"#F0E68C","fg":"#000000"},{"id":10240,"page":1,"row":2,"col":4,"bg":"#F0E68C","fg":"#000000"},{"id":10252,"page":1,"row":4,"col":2,"bg":"#48D1CC","fg":"#000000"},{"id":10185,"page":1,"row":4,"col":3,"bg":"#A0522D","fg":"#000000"}],"149":[{"id":10334,"page":1,"row":1,"col":1,"bg":"#FFFFFF","fg":"#000000"},{"id":10335,"page":1,"row":1,"col":2,"bg":"#FFFFFF","fg":"#000000"},{"id":10336,"page":1,"row":1,"col":3,"bg":"#FFFFFF","fg":"#000000"}],"150":[{"id":10340,"page":1,"row":1,"col":1,"bg":"#6A94C8","fg":"#EEECE1"}]},"items":{"10001":{"name":"Chicken Sate","price":0.0,"sizes":[{"i":1,"name":"Small","price":10.0},{"i":2,"name":"Large","price":20.0}],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10002":{"name":"Gyoza","price":11.25,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10003":{"name":"Cream Cheese Wonton","price":12.5,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10004":{"name":"Spring Rolls","price":10.5,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10005":{"name":"Tara Wings","price":13.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10006":{"name":"Edamame","price":10.5,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10007":{"name":"Thai Spicy Beef","price":17.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10008":{"name":"NS","price":19.96,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10009":{"name":"Tom Kha Gai XT","price":9.95,"sizes":[{"i":1,"name":"Small","price":0.0},{"i":2,"name":"Large","price":0.0}],"open":false,"desc":"","forced":[{"g":304,"min":1,"max":1}],"combo":null},"10010":{"name":"Tom Yum Gung SP","price":5.99,"sizes":[],"open":false,"desc":"","forced":[{"g":304,"min":1,"max":1}],"combo":null},"10011":{"name":"Wonton Soup SUPER","price":8.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10012":{"name":"Asian Salad (spicy)","price":10.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10013":{"name":"Squid Salad 1030","price":8.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10014":{"name":"Seaweed Salad","price":7.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10015":{"name":"Tuna Tataki","price":16.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10016":{"name":"Albacore Tataki","price":16.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10017":{"name":"Volcano Chicken","price":18.95,"sizes":[],"open":false,"desc":"","forced":[{"g":320,"min":1,"max":1}],"combo":null},"10018":{"name":"Cashew Chicken","price":17.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10019":{"name":"Rama","price":17.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10020":{"name":"Salmon Choo Chee","price":22.95,"sizes":[],"open":false,"desc":"","forced":[{"g":304,"min":1,"max":1}],"combo":null},"10021":{"name":"Catfish Filet","price":22.95,"sizes":[],"open":false,"desc":"","forced":[{"g":304,"min":1,"max":1}],"combo":null},"10022":{"name":"Garlic Shrimp","price":20.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10023":{"name":"Kapraw chicken","price":17.5,"sizes":[],"open":false,"desc":"","forced":[{"g":304,"min":1,"max":1}],"combo":null},"10024":{"name":"Red Curry","price":18.5,"sizes":[],"open":false,"desc":"","forced":[{"g":316,"min":1,"max":1},{"g":304,"min":1,"max":1}],"combo":null},"10025":{"name":"Pad Thai","price":16.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1},{"g":331,"min":3,"max":3}],"combo":null},"10026":{"name":"Drunken Noodle","price":16.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1},{"g":304,"min":1,"max":1}],"combo":null},"10027":{"name":"See Ew","price":16.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10028":{"name":"Thai Fried Rice","price":16.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10029":{"name":"Basil Fried Rice","price":16.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1},{"g":304,"min":1,"max":1}],"combo":null},"10030":{"name":"Pineapple Fried Rice","price":16.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10031":{"name":"Shrimp Nigiri","price":6.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10032":{"name":"Egg(Kai) Nigiri","price":6.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10033":{"name":"Octopus Nigiri","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10034":{"name":"Albacore Nigiri","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10035":{"name":"Salmon Nigiri","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10036":{"name":"Scallop Nigiri","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10037":{"name":"Tuna Nigiri","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10038":{"name":"Squid Nigiri","price":7.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10039":{"name":"Escolar Nigiri","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10040":{"name":"Surf Clam Nigiri","price":7.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10041":{"name":"Sear Tuna Nigiri","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10042":{"name":"Yellow Tail Nigiri","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10043":{"name":"Eel Nigiri","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10044":{"name":"Tobiko Nigiri","price":7.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10045":{"name":"Shrimp Sashimi","price":7.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10046":{"name":"Egg Sashimi","price":7.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10047":{"name":"Octopus Sashimi","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10048":{"name":"Albacore Sashimi","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10049":{"name":"Salmon Sashimi","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10050":{"name":"Scallop Sashimi","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10052":{"name":"Sear Tuna Sashimi","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10053":{"name":"Squid Sashimi","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10054":{"name":"Escolar Sashimi","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10055":{"name":"Surf Clam Sashimi","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10056":{"name":"Tuna Sashimi","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10057":{"name":"Yellow Tail Sashimi","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10058":{"name":"Eel Sashimi","price":12.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10059":{"name":"Tobiko Sashimi","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10060":{"name":"Tempura Shrimp Roll","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10061":{"name":"Avocado Roll","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10062":{"name":"California Roll","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10063":{"name":"Eel Roll","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10064":{"name":"Philladelphia Roll","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10065":{"name":"Salmon Roll","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10066":{"name":"Spicy Salmon Roll","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10067":{"name":"Spicy Scallops Roll","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10068":{"name":"Spicy Tuna Roll","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10069":{"name":"Yellowtail Roll","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10070":{"name":"Spicy Yellowtail Roll","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10071":{"name":"Tuna Roll","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10073":{"name":"Vegetable Roll","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10074":{"name":"St. Simons","price":15.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10075":{"name":"Red Dragon","price":16.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10076":{"name":"Crunch Munch","price":15.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10077":{"name":"Spider","price":16.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10078":{"name":"911","price":16.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10079":{"name":"Caterpillar","price":16.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10080":{"name":"Rainbow","price":16.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10081":{"name":"Broken Heart","price":16.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10082":{"name":"White Boy","price":16.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10083":{"name":"Kool Albacore","price":16.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10084":{"name":"Tara Combo","price":24.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10085":{"name":"Two Roll Deluxe","price":23.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":[{"label":"Choice 1","opts":[{"id":10074,"name":"St. Simons"},{"id":10075,"name":"Red Dragon"},{"id":10076,"name":"Crunch Munch"},{"id":10077,"name":"Spider"},{"id":10078,"name":"911"},{"id":10079,"name":"Caterpillar"},{"id":10080,"name":"Rainbow"},{"id":10081,"name":"Broken Heart"},{"id":10082,"name":"White Boy"},{"id":10217,"name":"Dynamite"},{"id":10218,"name":"Tiger"},{"id":10219,"name":"Yummy"},{"id":10220,"name":"Amazing"},{"id":10236,"name":"Fujiyama"},{"id":10238,"name":"Pink Lady"}]},{"label":"Choice 2","opts":[{"id":10060,"name":"Tempura Shrimp Roll"},{"id":10061,"name":"Avocado Roll"},{"id":10062,"name":"California Roll"},{"id":10063,"name":"Eel Roll"},{"id":10064,"name":"Philladelphia Roll"},{"id":10065,"name":"Salmon Roll"},{"id":10066,"name":"Spicy Salmon Roll"},{"id":10067,"name":"Spicy Scallops Roll"},{"id":10068,"name":"Spicy Tuna Roll"},{"id":10069,"name":"Yellowtail Roll"},{"id":10070,"name":"Spicy Yellowtail Roll"},{"id":10071,"name":"Tuna Roll"},{"id":10073,"name":"Vegetable Roll"},{"id":10198,"name":"Spicy California Roll"},{"id":10204,"name":"Cucumber Roll"},{"id":10235,"name":"Crab&creamcheese"}]}]},"10086":{"name":"Sashimi Combo","price":22.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10087":{"name":"Salmon Lover","price":24.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10088":{"name":"Boat","price":61.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":[{"label":"Choice 1","opts":[{"id":10074,"name":"St. Simons"},{"id":10075,"name":"Red Dragon"},{"id":10076,"name":"Crunch Munch"},{"id":10077,"name":"Spider"},{"id":10078,"name":"911"},{"id":10079,"name":"Caterpillar"},{"id":10080,"name":"Rainbow"},{"id":10081,"name":"Broken Heart"},{"id":10082,"name":"White Boy"},{"id":10083,"name":"Kool Albacore"}]},{"label":"Choice 2","opts":[{"id":10060,"name":"Tempura Shrimp Roll"},{"id":10061,"name":"Avocado Roll"},{"id":10062,"name":"California Roll"},{"id":10063,"name":"Eel Roll"},{"id":10064,"name":"Philladelphia Roll"},{"id":10065,"name":"Salmon Roll"},{"id":10066,"name":"Spicy Salmon Roll"},{"id":10067,"name":"Spicy Scallops Roll"},{"id":10068,"name":"Spicy Tuna Roll"},{"id":10069,"name":"Yellowtail Roll"},{"id":10070,"name":"Spicy Yellowtail Roll"},{"id":10071,"name":"Tuna Roll"},{"id":10073,"name":"Vegetable Roll"}]}]},"10089":{"name":"Chirachi","price":23.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10090":{"name":"(L) Thai Curry","price":15.95,"sizes":[],"open":false,"desc":"","forced":[{"g":325,"min":1,"max":1},{"g":317,"min":1,"max":1},{"g":304,"min":1,"max":1}],"combo":null},"10092":{"name":"(L) Broccoli Beef","price":15.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10093":{"name":"(L) Pad Thai","price":14.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10094":{"name":"(L) Cashew Chicken","price":15.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10095":{"name":"(L) Pineapple F/R","price":14.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10096":{"name":"(L) See Ew","price":14.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10097":{"name":"(L) Drunken Noodle","price":14.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1},{"g":304,"min":1,"max":1}],"combo":null},"10098":{"name":"(L) Thai Fried Rice","price":14.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10099":{"name":"(L) Heart Breaker","price":16.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10100":{"name":"(L) Basic","price":16.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10101":{"name":"(L) Tipsy Tuna","price":16.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10102":{"name":"Soda","price":4.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10103":{"name":"Thai Tea","price":5.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10104":{"name":"Ice Tea","price":4.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10105":{"name":"Hot Tea","price":4.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10106":{"name":"Evian water","price":5.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10107":{"name":"Juice","price":5.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10108":{"name":"Pellegrino","price":5.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10109":{"name":"Club Soda","price":4.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10110":{"name":"Non Alcohol","price":6.5,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10111":{"name":"Jack Daniel","price":9.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10112":{"name":"Crown Royal","price":10.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10113":{"name":"Makers Mark","price":10.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10114":{"name":"Jim Beam","price":7.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10115":{"name":"Bulleit","price":10.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10116":{"name":"Malibu","price":8.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10117":{"name":"Cap Morgan","price":9.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10118":{"name":"Barcadi","price":9.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10119":{"name":"Grey Goose","price":11.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10120":{"name":"Tito'S","price":9.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10121":{"name":"Tanqueray","price":9.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10122":{"name":"Hornito's","price":9.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10123":{"name":"Dwars","price":10.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10124":{"name":"Bombay","price":11.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10125":{"name":"Kahlua","price":9.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10126":{"name":"Martini","price":15.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10127":{"name":"Mount Gay","price":9.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10128":{"name":"Hennessey","price":13.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10129":{"name":"Grand Marnier","price":12.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10130":{"name":"Jameson","price":9.0,"sizes":[],"open":false,"desc":"","forced":[{"g":318,"min":1,"max":1}],"combo":null},"10134":{"name":"Yellow Curry","price":18.5,"sizes":[],"open":false,"desc":"","forced":[{"g":316,"min":1,"max":1},{"g":304,"min":1,"max":1}],"combo":null},"10135":{"name":"Panang Curry","price":18.5,"sizes":[],"open":false,"desc":"","forced":[{"g":316,"min":1,"max":1},{"g":304,"min":1,"max":1}],"combo":null},"10136":{"name":"Green Curry","price":18.5,"sizes":[],"open":false,"desc":"","forced":[{"g":316,"min":1,"max":1},{"g":304,"min":1,"max":1}],"combo":null},"10137":{"name":"Massaman Curry","price":18.5,"sizes":[],"open":false,"desc":"","forced":[{"g":316,"min":1,"max":1},{"g":304,"min":1,"max":1}],"combo":null},"10138":{"name":"Sapporo","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10139":{"name":"Stella","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10140":{"name":"Sweet Water","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10141":{"name":"Bud Light","price":7.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10142":{"name":"Singha","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10143":{"name":"Blue Moon","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10144":{"name":"Ultra","price":7.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10145":{"name":"Coors Light","price":7.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10146":{"name":"Small Carafe","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10147":{"name":"Large Carafe","price":12.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10148":{"name":"Gingo","price":12.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10149":{"name":"Nigori","price":12.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10150":{"name":"Sparkling","price":14.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10151":{"name":"Sake Bomb","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10152":{"name":"Chardonnay","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10153":{"name":"Riesling","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10154":{"name":"Pinot Grigio","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10155":{"name":"Sauvigon Blanc","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10156":{"name":"Cabernet","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10157":{"name":"Merlot","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10158":{"name":"Pinot Noir","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10159":{"name":"Malbec","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10160":{"name":"Chardonnay Bottle","price":31.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10161":{"name":"Riesling Bottle","price":26.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10162":{"name":"Pinot Grigio Bottle","price":31.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10163":{"name":"Sauvigon Blanc Bottle","price":31.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10164":{"name":"Cabernet Bottle","price":31.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10165":{"name":"Merlot Bottle","price":31.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10166":{"name":"Pinot Noir Bottle","price":31.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10167":{"name":"Malbec Bottle","price":36.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10168":{"name":"House White Wine","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10169":{"name":"House Red Wine","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10170":{"name":"Mai Tai","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10171":{"name":"Sangria","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10172":{"name":"Margarita","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10173":{"name":"Singapore Sling","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10174":{"name":"Thai Bloody Mary","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10175":{"name":"Martini","price":14.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10176":{"name":"Peanut Sauce","price":3.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10177":{"name":"Steamed Veg","price":5.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10178":{"name":"Steamed Broccoli","price":5.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10179":{"name":"Spicy Mayo Sauce","price":3.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10180":{"name":"White Sauce","price":2.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10181":{"name":"White Rice","price":4.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10182":{"name":"Brown Rice","price":4.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10183":{"name":"Crispy Duck","price":31.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10184":{"name":"Red Snapper","price":31.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10185":{"name":"Alaska Roll","price":18.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10186":{"name":"Sticky Rice Mango","price":11.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10187":{"name":"Ice Cream Tempura","price":9.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10188":{"name":"cheese cake Tempura","price":9.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10190":{"name":"OPEN FOOD","price":0.0,"sizes":[],"open":true,"desc":"","forced":[],"combo":null},"10191":{"name":"OPEN SUSHI","price":2.0,"sizes":[],"open":true,"desc":"","forced":[],"combo":null},"10192":{"name":"--------------------","price":2.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10198":{"name":"Spicy California Roll","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10199":{"name":".50","price":2.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10200":{"name":"1.00","price":3.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10201":{"name":"2.00","price":4.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10202":{"name":"3.00","price":5.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10203":{"name":"5.00","price":7.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10204":{"name":"Cucumber Roll","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10205":{"name":"Well","price":7.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10206":{"name":"House soup","price":5.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10207":{"name":"House salad","price":5.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10208":{"name":"(L) Sweet&Sour Chicken","price":14.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10209":{"name":"(L) Kapraw Chicken","price":14.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10210":{"name":"(L) Garlic pepper Beef","price":15.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10211":{"name":"(L) Salmon Fantasy","price":16.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10212":{"name":"(L) Shrimp Time","price":15.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10213":{"name":"(L) J & C","price":14.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10214":{"name":"Fresh Summer Rolls","price":9.75,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10215":{"name":"Ginger Chicken","price":17.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10216":{"name":"Broccoli Beef","price":17.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10217":{"name":"Dynamite","price":18.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10218":{"name":"Tiger","price":17.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10219":{"name":"Yummy","price":15.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10220":{"name":"Amazing","price":16.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10221":{"name":"Sweet&Sour Chicken","price":17.75,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10222":{"name":"corking fee","price":12.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10223":{"name":"Hawaiian Catfish","price":22.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10224":{"name":"Landshark","price":7.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10225":{"name":"Steamed Noodle","price":5.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10226":{"name":"Absoulut","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10227":{"name":"Long Island TS","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10228":{"name":"Patron","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10229":{"name":"Bahama Mama","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10230":{"name":"Lemonade","price":4.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10231":{"name":"Yuengling","price":7.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10233":{"name":"Blanketed Shrimp","price":21.5,"sizes":[],"open":true,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10234":{"name":"Yakisoba","price":16.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10235":{"name":"Crab&creamcheese","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10236":{"name":"Fujiyama","price":18.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10237":{"name":"Nigri&Sashimi Combo","price":18.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10238":{"name":"Pink Lady","price":16.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10239":{"name":"Eggplant Delight","price":17.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10240":{"name":"Snow pea with shrimp","price":17.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10241":{"name":"Top shelf","price":5.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10242":{"name":"Pepper garlic BEEF","price":17.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10243":{"name":"Mixed Veggie","price":16.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10244":{"name":"Double Shrimp","price":16.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10245":{"name":"Beef Jerky","price":20.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10247":{"name":"Fried Tofu","price":10.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10248":{"name":"Shirley temple","price":5.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10249":{"name":"Chicken Noodle Soup","price":16.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10250":{"name":"Smirnoff","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10251":{"name":"Calamari","price":13.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10252":{"name":"Cherry Blossom Roll","price":19.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10253":{"name":"Spaghetti","price":16.95,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1},{"g":304,"min":1,"max":1}],"combo":null},"10254":{"name":"Prosecco","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10255":{"name":"Fiji Water","price":5.5,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10256":{"name":"Cherry Blossom-Tini","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10257":{"name":"Asahi","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10258":{"name":"Westside Wontons","price":11.5,"sizes":[],"open":false,"desc":"","forced":[{"g":317,"min":1,"max":1}],"combo":null},"10259":{"name":"Wasabi","price":16.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10260":{"name":"Mango Tango","price":16.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10261":{"name":"Bahama Breeze","price":18.99,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10262":{"name":"Chicken Teriyaki","price":18.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10263":{"name":"Teriyaki Sauce","price":3.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10264":{"name":"Fried BANANA","price":7.95,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10275":{"name":"KentelOne","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10276":{"name":"Belvedere","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10277":{"name":"Jose Cuervo","price":9.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10280":{"name":"smirnoff","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10282":{"name":"Campari","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10283":{"name":"Southern Comfort","price":8.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10284":{"name":"Dwars18","price":14.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10285":{"name":"Dwars15","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10286":{"name":"Dom","price":12.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10287":{"name":"Courvoisier","price":12.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10288":{"name":"Dambuie","price":12.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10289":{"name":"BlackLable","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10290":{"name":"BlueLable","price":27.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10291":{"name":"GoldLable","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10292":{"name":"Johnny 18years","price":12.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10293":{"name":"Johnny DoubleBlack","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10294":{"name":"Chambord","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10295":{"name":"Bailey","price":11.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10307":{"name":"Test Kiosk Item","price":2.05,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10332":{"name":"Heng Food","price":1.0,"sizes":[],"open":false,"desc":"","forced":[{"g":343,"min":1,"max":1},{"g":342,"min":1,"max":1}],"combo":[{"label":"Choice 1","opts":[{"id":10302,"name":"Combo"}]}]},"10334":{"name":"Pad Thai","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10335":{"name":"Pad Thai Woonsen","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10336":{"name":"Pad Thai Boran","price":10.0,"sizes":[],"open":false,"desc":"","forced":[],"combo":null},"10340":{"name":"KS","price":10.0,"sizes":[],"open":false,"desc":"","forced":[{"g":304,"min":1,"max":1},{"g":345,"min":1,"max":1},{"g":346,"min":1,"max":1}],"combo":null}},"modGroups":{"320":{"name":"Volcano Chicken","bg":"#3333ff","mods":[1263,1264]},"325":{"name":"Curry Choice","bg":"#B22222","mods":[1315,1316,1317,1318,1319]},"331":{"name":"OLO - Pad Thai Meat","bg":"#00BFFF","mods":[1339,1341,1342,1340]},"304":{"name":"Spiciness","bg":"#FF0000","mods":[1079,1080,1081,1082,1083,1258]},"336":{"name":"COMBO MEAT","bg":"#00BFFF","mods":[1002,1004,1003,1009,1254,1008,1013]},"337":{"name":"COMBO SPICY","bg":"#3333FF","mods":[1223,1224,1082,1083]},"342":{"name":"Meat1","bg":"#3333FF","mods":[1281,1283]},"343":{"name":"Meat2","bg":"#3333ff","mods":[1002,1022]},"345":{"name":"KS-Meat","bg":"#9ACCFF","mods":[1356,1355,1354]},"346":{"name":"Extra Meat","bg":"#9ACCFF","mods":[1355,1354]},"316":{"name":"Meat (Curry)","bg":"#00BFFF","mods":[1002,1004,1003,1009,1005,1008,1013]},"317":{"name":"Meat (Noodle)","bg":"#00BFFF","mods":[1002,1004,1003,1009,1254,1353,1008,1013]},"318":{"name":"Bar Mod","bg":"#00BFFF","mods":[1255,1256,1257]}},"mods":{"1263":{"name":"Spicy Red Chili","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1264":{"name":"Pineapple Sauce","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1315":{"name":"Red","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1316":{"name":"Green","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1317":{"name":"Yellow","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1318":{"name":"Panang","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1319":{"name":"Massaman","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1339":{"name":"Cat","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1341":{"name":"No MSC","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1342":{"name":"Only Veg","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1340":{"name":"Online Beef","p":[1.0,0.0,0.0,0.0,0.0,0.0]},"1079":{"name":"No Chili","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1080":{"name":"Mild","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1081":{"name":"Medium","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1082":{"name":"Spicy","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1083":{"name":"Extra Spicy","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1258":{"name":"Thai Hot","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1002":{"name":"Chicken","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1004":{"name":"Beef","p":[1.0,5.0,10.0,0.0,0.0,0.0]},"1003":{"name":"Pork","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1009":{"name":"Tofu","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1254":{"name":"Shrimp","p":[2.0,2.0,0.0,0.0,0.0,0.0]},"1008":{"name":"Vegetable","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1013":{"name":"No Meat","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1223":{"name":"Not Spicy","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1224":{"name":"Mild Spicy","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1281":{"name":"Add Chicken","p":[2.0,0.0,0.0,0.0,0.0,0.0]},"1283":{"name":"Add Beef","p":[2.0,0.0,0.0,0.0,0.0,0.0]},"1022":{"name":"Celery","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1356":{"name":"No Meat","p":[0.0,0.0,0.0,0.0,0.0,0.0]},"1355":{"name":"Chicken Drumstick","p":[3.0,0.0,0.0,0.0,0.0,0.0]},"1354":{"name":"Beef","p":[4.0,0.0,0.0,0.0,0.0,0.0]},"1005":{"name":"Shrimp","p":[3.0,3.0,0.0,0.0,0.0,0.0]},"1353":{"name":"Seafood","p":[10.0,0.0,0.0,0.0,0.0,0.0]},"1255":{"name":"Well","p":[5.5,5.5,0.0,0.0,0.0,0.0]},"1256":{"name":"Top Shelf","p":[2.0,2.0,0.0,0.0,0.0,0.0]},"1257":{"name":"Double","p":[3.0,3.0,0.0,0.0,0.0,0.0]}}};
+const FORM_URL = "https://forms.zohopublic.com/zohopc798/form/MenuApproval/formperma/yaEHcd-2CmVYdlS0uEGeObmQl4ArpRGmBq6sLAuFgeM";
+
+const qs = new URLSearchParams(location.search);
+const TASK_ID = qs.get('task_id') || '', TOKEN = qs.get('token') || '';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const NAMES = [];
+const nref = n => { let i = NAMES.indexOf(n); if (i < 0) { NAMES.push(n); i = NAMES.length - 1; } return i; };
+const fmt = n => '$' + (Math.round(n * 100) / 100).toFixed(2);
+
+let gPage = 1, iPage = 1, selGroup = null, reportMode = false;
+let order = [], issues = [];
+try { issues = JSON.parse(localStorage.getItem('pp_issues_' + DATA.restaurant) || '[]'); } catch (e) { issues = []; }
+const saveIssues = () => { try { localStorage.setItem('pp_issues_' + DATA.restaurant, JSON.stringify(issues)); } catch (e) {} };
+
+/* ---------- categories ---------- */
+function renderGroups() {
+  const g = DATA.groupGrid, el = $('groupGrid');
+  el.style.gridTemplateColumns = `repeat(${g.cols}, 1fr)`;
+  el.style.gridTemplateRows = `repeat(${g.rows}, 1fr)`;
+  const mobile = matchMedia('(max-width: 820px)').matches;
+  const list = mobile ? DATA.groups : DATA.groups.filter(x => x.page === gPage);
+  el.innerHTML = list.map(x => `<button class="btn gbtn${x.id === selGroup ? ' sel' : ''}" style="grid-row:${x.row};grid-column:${x.col};background:${x.bg};color:${x.fg}" onclick="pickGroup(${x.id})"><span class="nm">${esc(x.name)}</span></button>`).join('');
+  $('gPageLbl').textContent = `${gPage} / ${g.pages}`;
+  $('gPrev').disabled = gPage <= 1; $('gNext').disabled = gPage >= g.pages;
+}
+function pickGroup(id) { selGroup = id; iPage = 1; renderGroups(); renderItems(); }
+
+/* ---------- menu items ---------- */
+function priceLabel(it) {
+  if (it.open) return 'Open price';
+  if (it.sizes.length) return it.sizes.map(s => `${s.name} ${fmt(s.price)}`).join(' · ');
+  return fmt(it.price);
+}
+const isZero = it => !it.open && !it.combo && !it.sizes.length && it.price === 0;
+const flagged = name => issues.some(i => i.item === name);
+
+function renderItems() {
+  const g = DATA.itemGrid, el = $('itemGrid');
+  const grp = DATA.groups.find(x => x.id === selGroup);
+  $('groupTitle').textContent = grp ? grp.name : '';
+  const all = DATA.layout[String(selGroup)] || [];
+  const pages = Math.max(1, ...all.map(x => x.page));
+  const mobile = matchMedia('(max-width: 820px)').matches;
+  const list = mobile ? all : all.filter(x => x.page === iPage);
+  el.style.gridTemplateColumns = `repeat(${g.cols}, 1fr)`;
+  el.style.gridTemplateRows = `repeat(${g.rows}, 1fr)`;
+  el.innerHTML = list.length ? list.map(x => {
+    const it = DATA.items[String(x.id)]; if (!it) return '';
+    return `<button class="btn ibtn${it.name.length > 16 ? ' long' : ''}" style="grid-row:${x.row};grid-column:${x.col};background:${x.bg};color:${x.fg}" onclick="tapItem(${x.id})">
+      ${flagged(it.name) ? '<span class="flag">🚩</span>' : ''}${isZero(it) ? '<span class="zero">$0</span>' : ''}
+      <span class="nm">${esc(it.name)}</span><span class="pr">${esc(priceLabel(it))}</span></button>`;
+  }).join('') : `<div class="empty-ticket" style="grid-column:1/-1">No items in this category.</div>`;
+  $('iPageLbl').textContent = `${iPage} / ${pages}`;
+  $('iPrev').disabled = iPage <= 1; $('iNext').disabled = iPage >= pages;
+}
+
+/* ---------- ordering flow (size → combo → forced choices) ---------- */
+let flow = null;
+function tapItem(id) {
+  const it = DATA.items[String(id)];
+  if (reportMode) return openReport(it.name);
+  const steps = [];
+  if (it.sizes.length) steps.push({ type: 'size' });
+  (it.combo || []).forEach((c, i) => steps.push({ type: 'combo', i }));
+  it.forced.forEach(f => { const g = DATA.modGroups[String(f.g)]; if (g && g.mods.length) steps.push({ type: 'mod', f, g }); });
+  flow = { it, steps, idx: 0, size: null, picks: steps.map(() => []) };
+  if (!steps.length) return finishFlow();
+  renderFlow();
+}
+function sizeIndex() { return flow.size ? flow.size.i : 0; }
+function stepOptions(st) {
+  if (st.type === 'size') return flow.it.sizes.map(s => ({ key: 's' + s.i, name: s.name, price: s.price, bg: '#9AD0F5' }));
+  if (st.type === 'combo') return flow.it.combo[st.i].opts.map(o => ({ key: 'c' + o.id, name: o.name, price: 0, bg: '#B9FBC0' }));
+  return st.g.mods.map(mid => { const m = DATA.mods[String(mid)]; return { key: 'm' + mid, name: m.name, price: m.p[sizeIndex()] || 0, bg: st.g.bg }; });
+}
+function stepRule(st) {
+  if (st.type === 'size') return { min: 1, max: 1, title: 'Choose a size' };
+  if (st.type === 'combo') return { min: 1, max: 1, title: flow.it.combo[st.i].label };
+  return { min: st.f.min, max: st.f.max, title: st.g.name };
+}
+function linePreview() {
+  const it = flow.it; let base = flow.size ? flow.size.price : it.price; const rows = [];
+  if (flow.size) rows.push([flow.size.name, 0]);
+  flow.steps.forEach((st, i) => { if (st.type !== 'size') flow.picks[i].forEach(p => rows.push([p.name, p.price])); });
+  return { base, rows, total: base + rows.reduce((a, r) => a + r[1], 0) };
+}
+function renderFlow() {
+  const st = flow.steps[flow.idx], rule = stepRule(st), opts = stepOptions(st), picks = flow.picks[flow.idx];
+  const pv = linePreview(), last = flow.idx === flow.steps.length - 1, ok = picks.length >= rule.min;
+  const ruleTxt = rule.min === rule.max ? `Required · choose <b>${rule.min}</b>` : `Required · choose <b>${rule.min}–${rule.max}</b>`;
+  $('modal').innerHTML = `
+    <div class="mt"><span>Forced Choices</span><span>${flow.idx + 1} of ${flow.steps.length}</span></div>
+    <div class="fc">
+      <div class="left">
+        <div class="ln"><span class="qty">1</span><span>${esc(flow.it.name)}</span><span>${fmt(pv.base)}</span></div>
+        <div class="picked">${pv.rows.map(r => `<div><span>${esc(r[0])}</span><span>${r[1] ? fmt(r[1]) : ''}</span></div>`).join('')}</div>
+        ${flow.it.desc ? `<div class="desc">${esc(flow.it.desc)}</div>` : ''}
+      </div>
+      <div>
+        <div class="steps-dots">${flow.steps.map((_, i) => `<i class="${i <= flow.idx ? 'done' : ''}"></i>`).join('')}</div>
+        <div class="step-title">${esc(rule.title)}</div>
+        <div class="step-rule">${ruleTxt}</div>
+        <div class="choices">${opts.map(o => `<button class="choice${picks.some(p => p.key === o.key) ? ' on' : ''}" style="background:${o.bg}" onclick="pickOpt('${o.key}')"><span>${esc(o.name)}</span>${o.price ? `<small>+${fmt(o.price)}</small>` : ''}</button>`).join('')}</div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="rep" onclick="openReport(NAMES[${nref(flow.it.name)}])">🚩 Something wrong with this item?</button>
+      ${flow.idx > 0 ? '<button class="ghost" onclick="flowBack()">Back</button>' : ''}
+      <button class="cancel" onclick="closeModal()">Cancel</button>
+      <button class="done" ${ok ? '' : 'disabled'} onclick="flowNext()">${last ? 'DONE' : 'NEXT'}</button>
+    </div>`;
+  showModal();
+}
+function pickOpt(key) {
+  const st = flow.steps[flow.idx], rule = stepRule(st), opts = stepOptions(st), o = opts.find(x => x.key === key);
+  let picks = flow.picks[flow.idx];
+  if (picks.some(p => p.key === key)) picks = picks.filter(p => p.key !== key);
+  else if (rule.max === 1) picks = [o];
+  else if (picks.length < rule.max) picks = picks.concat(o);
+  flow.picks[flow.idx] = picks;
+  if (st.type === 'size') { flow.size = picks.length ? flow.it.sizes.find(s => 's' + s.i === picks[0].key) : null; }
+  if (rule.max === 1 && picks.length === 1 && flow.idx < flow.steps.length - 1) { flow.idx++; }
+  renderFlow();
+}
+function flowBack() { flow.idx--; renderFlow(); }
+function flowNext() { if (flow.idx < flow.steps.length - 1) { flow.idx++; renderFlow(); } else finishFlow(); }
+function finishFlow() {
+  const pv = flow.steps.length ? linePreview() : { base: flow.it.price, rows: [], total: flow.it.price };
+  order.push({ name: flow.it.name + (flow.size ? ` (${flow.size.name})` : ''), base: pv.base, mods: pv.rows.filter(r => !flow.size || r[0] !== flow.size.name), total: pv.total });
+  closeModal(); renderOrder();
+}
+
+/* ---------- ticket ---------- */
+function renderOrder() {
+  const el = $('lines');
+  el.innerHTML = order.length ? order.map((l, i) => `<div class="line"><span>1 &nbsp;${esc(l.name)}</span><span>${fmt(l.base)}</span><button class="x" onclick="removeLine(${i})">✕</button>
+    ${l.mods.length ? `<div class="mods">${l.mods.map(m => `<div><span>- ${esc(m[0])}</span><span>${m[1] ? fmt(m[1]) : ''}</span></div>`).join('')}</div>` : ''}</div>`).join('')
+    : `<div class="empty-ticket">Tap a category, then tap menu items to build a sample order.<br>Prices and required choices work just like on your POS.</div>`;
+  const t = order.reduce((a, l) => a + l.total, 0);
+  $('subTotal').textContent = fmt(t); $('total').textContent = fmt(t);
+  $('mobTotal').textContent = `Order (${order.length}) · ${fmt(t)}`;
+}
+function removeLine(i) { order.splice(i, 1); renderOrder(); }
+function clearOrder() { order = []; renderOrder(); }
+function toggleTicket(open) { $('ticket').classList.toggle('open', open); }
+
+/* ---------- issues ---------- */
+function toggleReport() {
+  reportMode = !reportMode;
+  $('reportBtn').classList.toggle('on', reportMode);
+  $('reportBtn').textContent = reportMode ? '🚩 Tap an item to report… (tap to stop)' : '🚩 Report an Issue';
+  $('main').classList.toggle('reporting', reportMode);
+}
+function openReport(itemName) {
+  const existing = issues.find(i => i.item === itemName);
+  $('modal').innerHTML = `
+    <div class="mt"><span>Report an issue</span><span></span></div>
+    <div class="pad">
+      <h2>${esc(itemName || 'General')}</h2>
+      <p style="margin-top:0;color:#6b7280">Tell us what's wrong or missing – name, price, choices, description, anything.</p>
+      <textarea id="issueText" placeholder="e.g. Price should be $12.95 / Add Shrimp as a choice / Remove this item">${existing ? esc(existing.note) : ''}</textarea>
+    </div>
+    <div class="mfoot"><button class="cancel" onclick="closeModal()">Cancel</button><button class="done" onclick="saveIssue(NAMES[${nref(itemName || 'General')}])">Save</button></div>`;
+  showModal(); setTimeout(() => $('issueText').focus(), 50);
+}
+function saveIssue(itemName) {
+  const note = $('issueText').value.trim();
+  issues = issues.filter(i => i.item !== itemName);
+  if (note) issues.push({ item: itemName, note });
+  saveIssues(); closeModal(); updateIssueCount(); renderItems();
+}
+function updateIssueCount() { $('issueCount').textContent = issues.length; }
+function issuesText() { return issues.map(i => `• ${i.item}: ${i.note}`).join('\n'); }
+function openIssues() {
+  $('modal').innerHTML = `
+    <div class="mt"><span>Request changes</span><span></span></div>
+    <div class="pad">
+      <h2>Changes you've reported (${issues.length})</h2>
+      ${issues.length ? issues.map((i, n) => `<div class="issue"><div><b>${esc(i.item)}</b>${esc(i.note)}</div><div><button onclick="openReport(NAMES[${nref(i.item)}])">Edit</button> <button onclick="delIssue(${n})">Delete</button></div></div>`).join('')
+        : `<p class="hint">No issues yet. Tap <b>🚩 Report an Issue</b>, then tap any item that needs a change.</p>`}
+      <p style="margin-top:14px"><button class="ghost" style="background:#e3e5e8;padding:10px 14px" onclick="openReport('General')">+ Add a general note (not about one item)</button></p>
+    </div>
+    <div class="mfoot"><button class="ghost" onclick="closeModal()">Keep reviewing</button><button class="done" ${issues.length ? '' : 'disabled'} onclick="sendChanges()">Send changes to Wawio</button></div>`;
+  showModal();
+}
+function delIssue(n) { issues.splice(n, 1); saveIssues(); updateIssueCount(); renderItems(); openIssues(); }
+
+function formLink(decision, notes) {
+  const p = new URLSearchParams({ restaurant: DATA.restaurant, decision, task_id: TASK_ID, token: TOKEN });
+  if (notes) p.set('change_notes', notes);
+  return FORM_URL + '?' + p.toString();
+}
+function sendChanges() {
+  const text = issuesText();
+  if (TASK_ID && TOKEN && FORM_URL.startsWith('http')) { location.href = formLink('Request changes', text.slice(0, 1500)); return; }
+  noLinkModal('Request changes', text);
+}
+function openApprove() {
+  $('modal').innerHTML = `
+    <div class="mt"><span>Approve menu</span><span></span></div>
+    <div class="pad">
+      <h2>Everything looks good?</h2>
+      ${issues.length ? `<p class="hint">You still have <b>${issues.length}</b> reported issue(s). If those need fixing, tap <b>Request Changes</b> instead.</p>` : ''}
+      <p>By approving, you confirm the menu items, prices and choices are correct and ready to go live.</p>
+    </div>
+    <div class="mfoot"><button class="ghost" onclick="closeModal()">Keep reviewing</button><button class="done" onclick="approve()">Yes, approve menu</button></div>`;
+  showModal();
+}
+function approve() {
+  if (TASK_ID && TOKEN && FORM_URL.startsWith('http')) { location.href = formLink('Approve'); return; }
+  noLinkModal('Approve', 'Menu approved.');
+}
+function noLinkModal(decision, text) {
+  $('modal').innerHTML = `
+    <div class="mt"><span>${esc(decision)}</span><span></span></div>
+    <div class="pad">
+      <h2>Almost done</h2>
+      <p>Please <b>reply to the email we sent you</b> and paste the text below (or call us at 818-942-6160).</p>
+      <textarea readonly id="copyText">${esc(text)}</textarea>
+      <p><button class="ghost" style="background:#e3e5e8;padding:10px 14px" onclick="navigator.clipboard && navigator.clipboard.writeText($('copyText').value); this.textContent='Copied ✓'">Copy text</button></p>
+    </div>
+    <div class="mfoot"><button class="done" onclick="closeModal()">OK</button></div>`;
+  showModal();
+}
+
+/* ---------- modal + boot ---------- */
+function showModal() { $('ov').classList.add('show'); }
+function closeModal() { $('ov').classList.remove('show'); flow = null; }
+$('ov').addEventListener('click', e => { if (e.target.id === 'ov') closeModal(); });
+$('gPrev').onclick = () => { gPage--; renderGroups(); };
+$('gNext').onclick = () => { gPage++; renderGroups(); };
+$('iPrev').onclick = () => { iPage--; renderItems(); };
+$('iNext').onclick = () => { iPage++; renderItems(); };
+addEventListener('resize', () => { renderGroups(); renderItems(); });
+
+function welcome() {
+  $('modal').innerHTML = `
+    <div class="mt"><span>Welcome</span><span></span></div>
+    <div class="pad">
+      <h2>Review your POS menu – ${esc(DATA.restaurant)}</h2>
+      <p>This page works like the menu screen on your new POS. Nothing here is a real order.</p>
+      <ol class="steps-help">
+        <li>Tap a <b>category</b>, then tap <b>menu items</b>. Pick sizes and required choices just like at the register.</li>
+        <li>Check <b>names, prices, sizes and choices</b>. Items marked <span style="background:#d93131;color:#fff;font-size:11px;padding:1px 4px;font-weight:bold">$0</span> have no price yet.</li>
+        <li>See something wrong or missing? Tap <b>🚩 Report an Issue</b>, then tap the item and tell us what to change.</li>
+        <li>When you're done, tap <b>Request Changes</b> to send your notes, or <b>Approve Menu</b> if everything is correct.</li>
+      </ol>
+    </div>
+    <div class="mfoot"><button class="done" onclick="closeModal()">Start reviewing</button></div>`;
+  showModal();
+}
+
+$('restName').textContent = DATA.restaurant;
+selGroup = (DATA.groups.find(g => g.page === 1) || DATA.groups[0] || {}).id;
+renderGroups(); renderItems(); renderOrder(); updateIssueCount(); welcome();
+</script>
+</body>
+</html>
